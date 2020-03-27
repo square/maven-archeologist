@@ -12,14 +12,21 @@ infrastructure, is `ArtifactResolver`.  It has two ways to use it - the simple o
 downloads the relevant artifact and its pom file, and returns the file locations, or a slightly
 more nuanced API, which lets you get resolved maven metadata (but doesn't downlaod the artifact)
 
-### simple usage
+### Simplest Usage
+
+In this variant, the API just downloads the pom and artifact files and their hash files, validates
+the files, and returns pom and artifact files to you in a pair. 
 
 ```kotlin
 val resolver = ArtifactResolver() // creates a resolver with repo list defaulting to maven central
 val (pom, artifact) = resolver.download("com.google.guava:guava:27.1-jre")
 ```
 
-### flexible usage with metadata
+### Resolving Metadata
+
+This is the more robust way to use the API, and it gets you a `ResolvedArtifact`, which contains
+the fully resolved model object (resolved dependencies (including from dependencyManagement and
+properties substitutions)). The resolved artifact can then be used to fetch the main artifact.
 
 ```kotlin
 val resolver = ArtifactResolver() // creates a resolver with repo list defaulting to maven central
@@ -29,7 +36,7 @@ val result = resolver.download(resolvedArtifact) // returns FetchStatus
 if (result is SUCCESSFUL) { /* win! */ }
 ```
 
-### repositories
+### Adding Repositories
 
 The resolver defaults to resolving against maven central. Specifying repositories is as simple as:
 
@@ -48,8 +55,7 @@ val resolver = ArtifactResolver(repositories = listOf(rep1, rep2))
 Reasonably popular repositories have been pre-defined in the `Repositories` type, e.g.
 `Repositories.MAVEN_CENTRAL`
 
-### local artifact cache
-> (maven Local Repository)
+### Local Artifact Cache (maven Local Repository)
 
 By default, artifacts are cached in ${HOME}/.m2/repository, but this can be changed (per resolver
 instance) like so:
@@ -65,6 +71,25 @@ suitable for high-volume resolution, but it can help for small tasks and show ho
 ```shell
 bazel run //:resolver -- --local_maven_cache /path/to/cache some:artifact:1 another:artifact:2
 ```
+
+## Possible uses
+
+  * Build a dependency graph scanning/analysis tool
+  * Use in non-maven build tools for easier use of maven resolution
+  * Pre-fetching artifacts to permit later off-line function.
+  * ...
+
+## Known Limitations
+
+  * Does not download sub-artifacts (-sources.jar) or classifiers (yet)
+  * Does not do any traversal (this can be done in calling code) or transitive activity
+  * Does not do any multithreading (calling code can build a parallel graph walk around it)
+  * Has a crappy heuristic (with a hack for bundle) for converting packaging->suffix
+    - Doesn't resolve plugin metadata that might configure things like that.
+  * The CLI is super limited as a demo-app.
+  * Basic functionality is tested, but coverage is weak.
+  * Wraps the maven APIs, but might need some more ability to configure them (without bailing
+    out of the wrapper infrastructure entirely)
 
 ## License
 
