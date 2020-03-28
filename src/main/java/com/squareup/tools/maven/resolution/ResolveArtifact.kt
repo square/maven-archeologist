@@ -31,23 +31,6 @@ import java.nio.file.Path
 import java.util.ArrayList
 import kotlin.system.exitProcess
 
-private val squareRepositories = listOf(
-    Repository().apply {
-      id = "square-public"
-      releases = RepositoryPolicy().apply {
-        enabled = "true"
-      }
-      url = "https://maven.global.square/artifactory/square-public"
-    },
-    Repository().apply {
-      id = "android-public"
-      releases = RepositoryPolicy().apply {
-        enabled = "true"
-      }
-      url = "https://maven.global.square/artifactory/android-public"
-    }
-)
-
 @Parameters(separators = "=")
 object ResolveArgs {
   @Parameter(names = ["--help"], help = true, description = "This help text.", order = 9999)
@@ -115,7 +98,6 @@ fun main(vararg argv: String) {
   ResolveArgs.validate(jcommander)
   val resolver = ArtifactResolver(
       suppressAddRepositoryWarnings = true,
-      repositories = squareRepositories,
       cacheDir = ResolveArgs.localRepository
   )
   ResolveArgs.artifacts
