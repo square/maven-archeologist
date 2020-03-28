@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 @file:JvmName("ResolveArtifact")
-package com.squareup.tools.maven.resolution
+package com.squareup.tools.maven.resolution.demo.simple
 
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.ParameterException
 import com.beust.jcommander.Parameters
 import com.beust.jcommander.UnixStyleUsageFormatter
+import com.squareup.tools.maven.resolution.ArtifactResolver
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.SUCCESSFUL
-import org.apache.maven.model.Repository
-import org.apache.maven.model.RepositoryPolicy
+import com.squareup.tools.maven.resolution.GlobalConfig
+import com.squareup.tools.maven.resolution.exists
+import com.squareup.tools.maven.resolution.isDirectory
+import com.squareup.tools.maven.resolution.report
 import java.io.IOException
 import java.nio.file.FileSystems
 import java.nio.file.Files
@@ -64,23 +67,26 @@ object ResolveArgs {
     if (!localRepository.isAbsolute) localRepository = localRepository.toAbsolutePath().normalize()
     if (!localRepository.exists) {
       try {
-        Files.createDirectories(localRepository)
+        Files.createDirectories(
+            localRepository)
       } catch (e: IOException) {
-        error { "Could not create local maven cache $localRepository" }
+        com.squareup.tools.maven.resolution.error { "Could not create local maven cache $localRepository" }
         e.printStackTrace()
         context.usage()
         exitProcess(1)
       }
     } else if (!localRepository.isDirectory) {
-      error {
+      com.squareup.tools.maven.resolution.error {
         "Local maven cache path ($localRepository) must point to a directory (or be uncreated)"
       }
       context.usage()
       exitProcess(1)
     }
 
-    GlobalConfig.debug = debug
-    GlobalConfig.verbose = verbose
+    GlobalConfig.debug =
+        debug
+    GlobalConfig.verbose =
+        verbose
   }
 }
 
@@ -91,11 +97,12 @@ fun main(vararg argv: String) {
       .build()
       .also { it?.usageFormatter = UnixStyleUsageFormatter(it) }
       .parse(*argv) {
-        error { it.message }
+        com.squareup.tools.maven.resolution.error { it.message }
         it.jCommander.usage()
         exitProcess(22) // Invalid argument
       }
-  ResolveArgs.validate(jcommander)
+  ResolveArgs.validate(
+      jcommander)
   val resolver = ArtifactResolver(
       suppressAddRepositoryWarnings = true,
       cacheDir = ResolveArgs.localRepository
@@ -103,15 +110,20 @@ fun main(vararg argv: String) {
   ResolveArgs.artifacts
       .map { resolver.artifactFor(it) }
       .forEach { artifact ->
-        val resolvedArtifact = resolver.resolveArtifact(artifact)
-        resolvedArtifact?.apply {
-          report("Artifact model for ${resolvedArtifact.coordinate} successfully resolved.")
-          report("Pom file available at ${resolvedArtifact.pom.localFile}.")
-          val result = resolver.downloadArtifact(resolvedArtifact)
-          report("Attempt to fetch ${resolvedArtifact.coordinate} was ${result.javaClass.simpleName}")
-          if (result is SUCCESSFUL)
-            report("Main artifact file available at ${resolvedArtifact.main.localFile}")
-        }
+          val resolvedArtifact = resolver.resolveArtifact(artifact)
+          resolvedArtifact?.apply {
+            report(
+                "Artifact model for ${resolvedArtifact.coordinate} successfully resolved.")
+            report(
+                "Pom file available at ${resolvedArtifact.pom.localFile}.")
+            val result = resolver.downloadArtifact(resolvedArtifact)
+            report(
+                "Attempt to fetch ${resolvedArtifact.coordinate} " +
+                    "was ${result.javaClass.simpleName}")
+            if (result is SUCCESSFUL)
+              report(
+                  "Main artifact file available at ${resolvedArtifact.main.localFile}")
+          }
       }
 }
 

@@ -17,7 +17,11 @@ package com.squareup.tools.maven.resolution
 
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus
 import org.apache.maven.model.Repository
+import java.nio.file.CopyOption
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import java.nio.file.StandardCopyOption.ATOMIC_MOVE
 
 /**
  * A convenience partial implementation which does all the organization around fetch results and trying
@@ -86,4 +90,16 @@ abstract class AbstractArtifactFetcher(protected val cacheDir: Path): ArtifactFe
     return mainFetchResult
   }
 
+  /**
+   * Supplies the (recommended) way to write files to the file-system, doing a thread-safe process
+   * of writing to a (unique) temporary file in the same filesystem (beside) the end file, then
+   * doing an atomic move operation (if supported by the OS) onto the target file location.
+   */
+  protected fun safeWrite(localFile: Path, body: ByteArray) {
+    // TODO Lock things down so that if a file will be written, it has to use this.
+    Files.createDirectories(localFile.parent)
+    val temp = Files.createTempFile(localFile.parent, "temp-", localFile.fileName.toString())
+    Files.write(temp, body)
+    Files.move(temp, localFile, ATOMIC_MOVE)
+  }
 }

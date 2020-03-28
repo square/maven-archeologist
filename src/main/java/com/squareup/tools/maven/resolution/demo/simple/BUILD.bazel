@@ -9,21 +9,19 @@
 # is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 # or implied. See the License for the specific language governing permissions and limitations under
 # the License.
-load("//:versions.bzl", "JAVA_LANGUAGE_LEVEL", "KOTLIN_LANGUAGE_LEVEL")
-load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "define_kt_toolchain")
-define_kt_toolchain(
-    name = "kotlin_toolchain",
-    api_version = KOTLIN_LANGUAGE_LEVEL,
-    jvm_target = JAVA_LANGUAGE_LEVEL,
-    language_version = KOTLIN_LANGUAGE_LEVEL,
-)
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
 
+package(default_visibility = ["//:__subpackages__"])
 
-
-java_binary(
-    name = "resolve",
-    main_class = "com.squareup.tools.maven.resolution.ResolveArtifact",
-    runtime_deps = [
-        "//src/main/java/com/squareup/tools/maven/resolution/demo/simple",
+kt_jvm_library(
+    name = "simple",
+    srcs = [ "ResolveArtifact.kt" ],
+    friend = "//src/main/java/com/squareup/tools/maven/resolution",
+    deps = [
+        "//src/main/java/com/squareup/tools/maven/resolution",
+        "@maven//com/beust:jcommander",
+        "@maven//org/apache/maven:maven-builder-support",
+        "@maven//org/apache/maven:maven-model",
+        "@maven//org/apache/maven:maven-model-builder",
     ],
 )

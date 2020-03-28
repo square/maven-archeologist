@@ -24,7 +24,6 @@ import okhttp3.Request
 import okhttp3.Request.Builder
 import org.apache.maven.model.Repository
 import java.io.IOException
-import java.nio.file.Files
 import java.nio.file.Path
 
 /**
@@ -61,8 +60,7 @@ class HttpArtifactFetcher(
               response.body?.bytes()?.let { body ->
                 try {
                   var localFile = cacheDir.resolve(path)
-                  Files.createDirectories(localFile.parent)
-                  Files.write(localFile, body)
+                  safeWrite(localFile, body)
                   if (fileSpec.localFile.exists) SUCCESSFUL
                   else FETCH_ERROR(
                       repository = repository.id,

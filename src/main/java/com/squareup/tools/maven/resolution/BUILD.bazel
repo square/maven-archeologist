@@ -14,7 +14,7 @@ load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
 package(default_visibility = ["//:__subpackages__"])
 
 CLI_SRCS = [
-    "ResolveArtifact.kt",
+    "demo/simple/ResolveArtifact.kt",
 ]
 
 kt_jvm_library(
