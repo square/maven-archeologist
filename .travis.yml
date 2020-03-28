@@ -1,0 +1,43 @@
+language: generic
+dist: xenial
+sudo: enabled
+os:
+  - osx
+  - linux
+
+env:
+  global:
+    - BAZELISK_VERSION="1.3.0"
+    - PATH=${PATH}:${HOME}/bin
+
+addons:
+  apt:
+    packages:
+      - wget
+      - openjdk-8-jdk
+  homebrew:
+    taps:
+      - adoptopenjdk/openjdk
+    casks:
+      - adoptopenjdk8
+    update: true
+
+before_install:
+  - if [ "osx" == "${TRAVIS_OS_NAME}" ]; then export PLATFORM="darwin" ; else export PLATFORM="${TRAVIS_OS_NAME}" ; fi
+  - if [ "osx" == "${TRAVIS_OS_NAME}" ]; then export JAVA_HOME="/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home" ; fi
+  - if [ "linux" == "${TRAVIS_OS_NAME}" ]; then export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64" ; fi
+  - ls -FaCl ${JAVA_HOME}/bin
+
+install:
+  - tools/setup-ci.sh
+  - java -version
+  - bazel version
+
+script:
+  - # Test each root in the build matrix.
+  - cd ${HOME}/build/${TRAVIS_REPO_SLUG}/${SEGMENT}
+  - bazel test //...
+
+cache:
+  directories:
+    - $HOME/bin
