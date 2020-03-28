@@ -1,24 +1,24 @@
 # Maven archeology
 
 A library to make resolving maven artifacts (from various repositories) easy.  The library itself
-wraps the maven resolver APIs and provides simple http based resolution. From this any number of
+wraps the Maven resolver APIs and provides simple HTTP-based resolution. From this any number of
 tools can be constructed, which require obtaining (and locally caching) maven artifacts, resolving
 the "effective project model", validating hashes, etc.
 
 ## Usage
 
-The main entry point to the library, which wraps (and mostly hides) the maven resolution
+The main entry point to the library, which wraps (and mostly hides) the Maven resolution
 infrastructure, is `ArtifactResolver`.  It has two ways to use it - the simple one which just
-downloads the relevant artifact and its pom file, and returns the file locations, or a slightly
-more nuanced API, which lets you get resolved maven metadata (but doesn't downlaod the artifact)
+downloads the relevant artifact and its POM file, and returns the file locations, or a slightly
+more nuanced API, which lets you get resolved Maven metadata (but doesn't download the artifact).
 
 ### Simplest Usage
 
-In this variant, the API just downloads the pom and artifact files and their hash files, validates
-the files, and returns pom and artifact files to you in a pair. 
+In this variant, the API just downloads the POM and artifact files and their hash files, validates
+the files, and returns POM and artifact files to you in a pair. 
 
 ```kotlin
-val resolver = ArtifactResolver() // creates a resolver with repo list defaulting to maven central
+val resolver = ArtifactResolver() // creates a resolver with repo list defaulting to Maven Central.
 val (pom, artifact) = resolver.download("com.google.guava:guava:27.1-jre")
 ```
 
@@ -29,7 +29,7 @@ the fully resolved model object (resolved dependencies (including from dependenc
 properties substitutions)). The resolved artifact can then be used to fetch the main artifact.
 
 ```kotlin
-val resolver = ArtifactResolver() // creates a resolver with repo list defaulting to maven central
+val resolver = ArtifactResolver() // creates a resolver with repo list defaulting to Maven Central.
 val artifact = resolver.artifactFor("com.google.guava:guava:27.1-jre") // returns Artifact
 val resolvedArtifact = resolver.resolveArtifact(artifact) // returns ResolvedArtifact
 val result = resolver.download(resolvedArtifact) // returns FetchStatus
@@ -38,7 +38,7 @@ if (result is SUCCESSFUL) { /* win! */ }
 
 ### Adding Repositories
 
-The resolver defaults to resolving against maven central. Specifying repositories is as simple as:
+The resolver defaults to resolving against Maven Central. Specifying repositories is as simple as:
 
 ```kotlin
 val repo1 = Repository().apply {
@@ -49,15 +49,15 @@ val repo1 = Repository().apply {
 val repo2 = ...
 val resolver = ArtifactResolver(repositories = listOf(rep1, rep2))
 ```
-> Note: This is one of the rare times you'll directly interact with maven's internal APIs, except
+> Note: This is one of the rare times you'll directly interact with Maven's internal APIs, except
 > for interacting with the `Model` object if you resolve the effective-model.
 
 Reasonably popular repositories have been pre-defined in the `Repositories` type, e.g.
 `Repositories.MAVEN_CENTRAL`
 
-### Local Artifact Cache (maven Local Repository)
+### Local Artifact Cache (Maven Local Repository)
 
-By default, artifacts are cached in ${HOME}/.m2/repository, but this can be changed (per resolver
+By default, artifacts are cached in `${HOME}/.m2/repository`, but this can be changed (per resolver
 instance) like so:
 
 ```kotlin
@@ -75,7 +75,7 @@ bazel run //:resolver -- --local_maven_cache /path/to/cache some:artifact:1 anot
 ## Possible uses
 
   * Build a dependency graph scanning/analysis tool
-  * Use in non-maven build tools for easier use of maven resolution
+  * Use in non-Maven build tools for easier use of Maven resolution
   * Pre-fetching artifacts to permit later off-line function.
   * ...
 
@@ -88,7 +88,7 @@ bazel run //:resolver -- --local_maven_cache /path/to/cache some:artifact:1 anot
     - Doesn't resolve plugin metadata that might configure things like that.
   * The CLI is super limited as a demo-app.
   * Basic functionality is tested, but coverage is weak.
-  * Wraps the maven APIs, but might need some more ability to configure them (without bailing
+  * Wraps the Maven APIs, but might need some more ability to configure them (without bailing
     out of the wrapper infrastructure entirely)
 
 ## License
