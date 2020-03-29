@@ -37,6 +37,7 @@ script:
   - # Test each root in the build matrix.
   - cd ${HOME}/build/${TRAVIS_REPO_SLUG}/${SEGMENT}
   - bazel test //...
+  - bazel run //:resolve -- --local_maven_cache /tmp/maven/${TRAVIS_COMMIT} com.google.truth:truth:1.0
 
 cache:
   directories:
