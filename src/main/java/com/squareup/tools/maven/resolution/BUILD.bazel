@@ -27,16 +27,3 @@ kt_jvm_library(
         "@maven//org/apache/maven:maven-model-builder",
     ],
 )
-
-kt_jvm_library(
-    name = "main",
-    srcs = CLI_SRCS,
-    friend = ":resolution",
-    deps = [
-        ":resolution",
-        "@maven//com/beust:jcommander",
-        "@maven//org/apache/maven:maven-builder-support",
-        "@maven//org/apache/maven:maven-model",
-        "@maven//org/apache/maven:maven-model-builder",
-    ],
-)
