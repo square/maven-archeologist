@@ -23,3 +23,8 @@ kt_jvm_library(
         "@maven//org/apache/maven:maven-model-builder",
     ],
 )
+
+filegroup(
+    name = "kdoc_srcs",
+    srcs = glob(["*.kt"]),
+)
