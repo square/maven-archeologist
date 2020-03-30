@@ -13,13 +13,9 @@ load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
 
 package(default_visibility = ["//:__subpackages__"])
 
-CLI_SRCS = [
-    "demo/simple/ResolveArtifact.kt",
-]
-
 kt_jvm_library(
     name = "resolution",
-    srcs = glob(["*.kt"], exclude = CLI_SRCS),
+    srcs = glob(["*.kt"]),
     deps = [
         "@maven//com/squareup/okhttp3:okhttp",
         "@maven//org/apache/maven:maven-builder-support",
