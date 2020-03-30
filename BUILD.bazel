@@ -22,7 +22,7 @@ define_kt_toolchain(
 
 java_binary(
     name = "resolve",
-    main_class = "com.squareup.tools.maven.resolution.ResolveArtifact",
+    main_class = "com.squareup.tools.maven.resolution.demo.simple.ResolveArtifact",
     runtime_deps = [
         "//src/main/java/com/squareup/tools/maven/resolution/demo/simple",
     ],
