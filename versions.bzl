@@ -19,7 +19,6 @@ KOTLIN_VERSION = "1.3.71"
 KOTLINC_RELEASE_SHA = "7adb77dad99c6d2f7bde9f8bafe4c6244a04587a8e36e62b074d00eda9f8e74a"
 KOTLINC_RELEASE_URL = "https://github.com/JetBrains/kotlin/releases/download/v{v}/kotlin-compiler-{v}.zip".format(v = KOTLIN_VERSION)
 
-
 # what version of the kotlin rules are we using
 KOTLIN_RULES_VERSION = "sq_05"
 KOTLIN_RULES_FORK = "cgruber"
@@ -35,11 +34,11 @@ MAVEN_REPOSITORY_RULES_SHA = "92db5ef2eaee8281e9e6c136adce757b129b45b198a9f5b4bf
 MAVEN_LIBRARY_VERSION = "3.6.3"
 
 DIRECT_ARTIFACTS = {
-    "com.beust:jcommander:1.78": {"insecure": True},
+    "com.github.ajalt:clikt:2.6.0": {"insecure": True},
     "com.google.truth:truth:1.0": {
         "insecure": True,
         "testonly": True,
-        "exclude": ["com.google.auto.value:auto-value-annotations"]
+        "exclude": ["com.google.auto.value:auto-value-annotations"],
     },
     "com.google.guava:guava:27.1-jre": {
         "insecure": True,
@@ -52,7 +51,7 @@ DIRECT_ARTIFACTS = {
     "org.apache.maven:maven-model:%s" % MAVEN_LIBRARY_VERSION: {"insecure": True},
     "org.apache.maven:maven-model-builder:%s" % MAVEN_LIBRARY_VERSION: {
         "insecure": True,
-        "exclude": ["javax.inject:javax.inject", "org.eclipse.sisu:org.eclipse.sisu.inject"]
+        "exclude": ["javax.inject:javax.inject", "org.eclipse.sisu:org.eclipse.sisu.inject"],
     },
     "junit:junit:4.13": {"insecure": True, "testonly": True},
 }
@@ -81,5 +80,5 @@ def maven_artifacts():
     artifacts = {}
     artifacts.update(DIRECT_ARTIFACTS)
     for artifact in TRANSITIVE_ARTIFACTS:
-        artifacts.update({ artifact: {"insecure": True}})
+        artifacts.update({artifact: {"insecure": True}})
     return artifacts
