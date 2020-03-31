@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 @file:JvmName("ResolveArtifact")
+
 package com.squareup.tools.maven.resolution.demo.simple
 
 import com.github.ajalt.clikt.core.CliktCommand
@@ -35,18 +36,18 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.system.exitProcess
 
-class Resolve: CliktCommand() {
+class Resolve : CliktCommand() {
   private val debug by option("--debug", "-d").flag(default = false)
 
   private val verbose by option("--verbose", "-v").flag(default = false)
 
   val localRepository: Path by option(
       "--local_maven_cache",
-      help= "The prefix into which maven artifacts will be cached (e.g. @maven//foo/bar). " +
+      help = "The prefix into which maven artifacts will be cached (e.g. @maven//foo/bar). " +
           "The tool will create the local cache directory if it does not exist."
   )
       .path(canBeFile = false, canBeSymlink = false, canBeDir = true)
-      .default(Paths.get("${System.getProperties()["user.home"]}",".m2/repository"))
+      .default(Paths.get("${System.getProperties()["user.home"]}", ".m2/repository"))
 
   val artifacts by argument().multiple()
 
@@ -63,6 +64,7 @@ class Resolve: CliktCommand() {
       }
     }
   }
+
   override fun run() {
     validate()
     val resolver = ArtifactResolver(
