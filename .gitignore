@@ -3,3 +3,4 @@ bazel-*
 .ijwb/
 .aswb/
 *.profile.gz
+*.asc
