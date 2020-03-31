@@ -35,7 +35,7 @@ MAVEN_REPOSITORY_RULES_SHA = "92db5ef2eaee8281e9e6c136adce757b129b45b198a9f5b4bf
 MAVEN_LIBRARY_VERSION = "3.6.3"
 
 DIRECT_ARTIFACTS = {
-    "com.beust:jcommander:1.78": {"insecure": True},
+    "com.github.ajalt:clikt:2.6.0": {"insecure": True},
     "com.google.truth:truth:1.0": {
         "insecure": True,
         "testonly": True,

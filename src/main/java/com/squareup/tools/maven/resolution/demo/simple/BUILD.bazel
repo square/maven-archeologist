@@ -19,7 +19,7 @@ kt_jvm_library(
     friend = "//src/main/java/com/squareup/tools/maven/resolution",
     deps = [
         "//src/main/java/com/squareup/tools/maven/resolution",
-        "@maven//com/beust:jcommander",
+        "@maven//com/github/ajalt:clikt",
         "@maven//org/apache/maven:maven-builder-support",
         "@maven//org/apache/maven:maven-model",
         "@maven//org/apache/maven:maven-model-builder",
