@@ -9,6 +9,8 @@ env:
   global:
     - BAZELISK_VERSION="1.3.0"
     - PATH=${PATH}:${HOME}/bin
+    - secure: g/fQ235mgDKmrGlRI4rp1EdlEMs49ypFNpmoR1XZlxvK1oJA+YsOoUabKmb069eQbhpYlGY0i+P+ra7SLH9/4ITSaYHESjAH5iF+tyJ3620WcjzMBfJ7cLEDc5h88Q+TIwFbyg28QUvx7RDgahp6dVLCXTm9+wtKFG274SY4bkckXs4SNYDZS4PSHpR6V3F65ruYlfX6T5UHt1IQUZe6v4Ryu2hIZRHefo4mgWce+U972v0G7VM3d9YUAhOhDJySUU70uxDhsiPJwt9H5PJdR5KZndQltowCtRjx/XUDhAUTnPXIqdLS5IyVNlT9alp1pihbQa6K0P/O0b1t4hx0CHmSSJ3tsXoQ1EJb1uD/+rVYHalUe5Oih5DfolYCxgDX23BAFj/oFiDepOhkE9tF8YFDf6m2mSDLLL58KviiQNsk5nGD/qmcAurrS1WqYjjWmIZJLgtoqeXFHkALx94ucSwIumHnmBgw3ZjoOmXZpd0okx8U5h2ldtjK/BgZRJTmTRfxFUlQKitFzx2LTuBFJuhKjFGRNlXnsBhKnuuRjRE+O970oQxDuKdR86+9ObavHSdYkZHkDQ4xRM1iYv108qtnrNuvwD0EbN5PgrO7QpPjELLwuR3DMfweVVPv2zYf+bLXvNI1+1mrGcqTPuJrV7pWi85yfckMJmFA4wWsb9s=
+    - secure: SJ2uNrMegkjhGb2mvn/Lw6Ex5F9EMsnuGCDz0QgGhSbAPiiLNKXqssQdrCs5QzcranmBgG9h2GJt6T0YbKZs+/youd2BRZGekUZ7hPCPh0sdeQD/7qsT0bfdFexxnD0toaJ5MMLxo6nIy3XfYKni1uu3CKGPQi0SUK7e3+jdxctKuQI8kFxa9X/Tz0Mfpm4wr92qY2JKnRCyF34qGbNeh38CXc4tcYq5Z4gzNVWwBTqb2IpYrhHoCGaJnV3bCF1eX0MnTsIVsE1kQWde0c2IMIOJscE7b93mr4wMssYuHaZMESVUSovxAKZu9L0Cy7rF3XyunpPuWZSt19KlKmmyLN6A/n/jkdeHKmQ8U3mFRNIrmob4iS/Dyp/617wV1Ksqb03RYUy/y5dqnkv+HFkClJeUxvkjU3ky14KVyv/DJwT5K1vbXzoBNdIdVzxM2JA6ZSHErly1xoiXn1UAyrksFgP3JgiOCuBe9VvHnDKev2kBodN/JdJrz+mnrTmcV5efUk3hs237iLWtIz5wqLk8/MPGTQ2CA6oIgtVVrq7X41E5Gj/3QtB/3+avPgzKEENUdI5esOJ8ASqR1hLBWY5z0QikO3OVcnMX2DETDyS3/CTHDXq3hk+8JqpkZnFgwfKXCTi9EGAkSlHhoEEGpdvSfhtnEGEaPk3FZHbs4rFpf14=
 
 addons:
   apt:
@@ -38,6 +40,7 @@ script:
   - cd ${HOME}/build/${TRAVIS_REPO_SLUG}/${SEGMENT}
   - bazel test //...
   - bazel run //:resolve -- --local_maven_cache /tmp/maven/${TRAVIS_COMMIT} com.google.truth:truth:1.0
+  - tools/deploy.kts
 
 cache:
   directories:
