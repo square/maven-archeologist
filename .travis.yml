@@ -2,7 +2,7 @@ language: generic
 dist: xenial
 sudo: enabled
 os:
-  - osx
+  # - osx
   - linux
 
 env:
