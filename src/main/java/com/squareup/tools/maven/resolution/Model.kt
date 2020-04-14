@@ -15,8 +15,8 @@
  */
 package com.squareup.tools.maven.resolution
 
-import org.apache.maven.model.Model
 import java.nio.file.Path
+import org.apache.maven.model.Model
 
 private val packagingToSuffix = mapOf(
     "bundle" to "jar"
@@ -50,7 +50,7 @@ class ResolvedArtifact(
   cacheDir: Path,
   /** Whether this artifact metadata was remotely fetched or satisfied from the local cache. */
   val cached: Boolean = false
-):
+) :
     Artifact(model.groupId, model.artifactId, model.version, cacheDir) {
   val main = ArtifactFile(this, cacheDir)
 
@@ -82,7 +82,9 @@ interface FileSpec {
   val artifact: Artifact
 
   fun validateHashes(): Boolean {
-    assert(localFile.exists) { "Attempted to validate hashes on an un-fetched pom file $localFile." }
+    assert(localFile.exists) {
+      "Attempted to validate hashes on an un-fetched pom file $localFile."
+    }
     return validateHash(localFile, "sha1", localFile.sha1File, Path::sha1) &&
         validateHash(localFile, "md5", localFile.md5File, Path::md5)
   }
@@ -108,7 +110,7 @@ class PomFile
 class ArtifactFile(
   override val artifact: ResolvedArtifact,
   private val cacheDir: Path
-): FileSpec {
+) : FileSpec {
   override val coordinate: String get() = artifact.coordinate
 
   override val path: Path by lazy {

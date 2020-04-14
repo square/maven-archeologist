@@ -18,15 +18,15 @@ package com.squareup.tools.maven.resolution
 import org.apache.maven.model.Repository
 
 sealed class FetchStatus {
-  sealed class RepositoryFetchStatus: FetchStatus() {
+  sealed class RepositoryFetchStatus : FetchStatus() {
     /** Artifact file successfully fetched and validated */
-    sealed class SUCCESSFUL: RepositoryFetchStatus() {
-      object FOUND_IN_CACHE: SUCCESSFUL()
-      object SUCCESSFULLY_FETCHED: SUCCESSFUL()
+    sealed class SUCCESSFUL : RepositoryFetchStatus() {
+      object FOUND_IN_CACHE : SUCCESSFUL()
+      object SUCCESSFULLY_FETCHED : SUCCESSFUL()
     }
 
     /** Artifact file could not be found in any repositories given to the fetcher. */
-    object NOT_FOUND: RepositoryFetchStatus()
+    object NOT_FOUND : RepositoryFetchStatus()
 
     /** An individual error from a given repository (id) */
     data class FETCH_ERROR(
@@ -34,11 +34,11 @@ sealed class FetchStatus {
       val message: Any? = null,
       val responseCode: Int? = null,
       val error: Throwable? = null
-    ): RepositoryFetchStatus()
+    ) : RepositoryFetchStatus()
   }
 
   /** Artifact file found and fetched, but failed hash validation */
-  object INVALID_HASH: FetchStatus()
+  object INVALID_HASH : FetchStatus()
 
   /**
    * A compound error containing the full map of errors from repositories which had errors.
@@ -46,7 +46,7 @@ sealed class FetchStatus {
    * This should be returned where there were non-404 failures from various given repositories,
    * when none of them were successful.
    */
-  data class ERROR(val errors: Map<String, RepositoryFetchStatus>): FetchStatus()
+  data class ERROR(val errors: Map<String, RepositoryFetchStatus>) : FetchStatus()
 }
 
 interface ArtifactFetcher {
@@ -64,4 +64,3 @@ interface ArtifactFetcher {
    */
   fun fetchArtifact(artifactFile: ArtifactFile, repositories: List<Repository>): FetchStatus
 }
-

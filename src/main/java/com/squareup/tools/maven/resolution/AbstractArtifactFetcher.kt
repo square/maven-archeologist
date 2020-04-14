@@ -16,23 +16,23 @@
 package com.squareup.tools.maven.resolution
 
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus
-import org.apache.maven.model.Repository
-import java.nio.file.CopyOption
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 import java.nio.file.StandardCopyOption.ATOMIC_MOVE
+import org.apache.maven.model.Repository
 
 /**
- * A convenience partial implementation which does all the organization around fetch results and trying
- * various repositories.
+ * A convenience partial implementation which does all the organization around fetch results and
+ * trying various repositories.
  */
-abstract class AbstractArtifactFetcher(protected val cacheDir: Path): ArtifactFetcher {
+abstract class AbstractArtifactFetcher(protected val cacheDir: Path) : ArtifactFetcher {
   override fun fetchPom(pom: PomFile, repositories: List<Repository>): FetchStatus =
       fetchFiles(pom, repositories)
 
-  override fun fetchArtifact(artifactFile: ArtifactFile, repositories: List<Repository>): FetchStatus =
-      fetchFiles(artifactFile, repositories)
+  override fun fetchArtifact(
+    artifactFile: ArtifactFile,
+    repositories: List<Repository>
+  ): FetchStatus = fetchFiles(artifactFile, repositories)
 
   /**
    * The workhorse method which actually fetches a file and writes it to the local cacheDir in the
@@ -40,7 +40,11 @@ abstract class AbstractArtifactFetcher(protected val cacheDir: Path): ArtifactFe
    * `"${repository.url}/$path"` to `cacheDir.resolve(path)` for any URLs they support, and return
    * the appropriate RepositoryFetchStatus based on the success of that operation.
    */
-  abstract fun fetchFile(fileSpec: FileSpec, repository: Repository, path: Path): RepositoryFetchStatus
+  abstract fun fetchFile(
+    fileSpec: FileSpec,
+    repository: Repository,
+    path: Path
+  ): RepositoryFetchStatus
 
   fun fetchFiles(fileSpec: FileSpec, repositories: List<Repository>): FetchStatus {
     if (fileSpec.artifact.snapshot)
@@ -68,8 +72,8 @@ abstract class AbstractArtifactFetcher(protected val cacheDir: Path): ArtifactFe
         }
       }
       return when {
-        !fileSpec.localFile.exists -> if (errors.isEmpty()) RepositoryFetchStatus.NOT_FOUND else FetchStatus.ERROR(
-            errors)
+        !fileSpec.localFile.exists ->
+          if (errors.isEmpty()) RepositoryFetchStatus.NOT_FOUND else FetchStatus.ERROR(errors)
         !fileSpec.validateHashes() -> FetchStatus.INVALID_HASH
         else -> RepositoryFetchStatus.SUCCESSFUL.SUCCESSFULLY_FETCHED
       }
@@ -79,7 +83,10 @@ abstract class AbstractArtifactFetcher(protected val cacheDir: Path): ArtifactFe
     }
   }
 
-  private fun fetchFileAndHashes(fileSpec: FileSpec, repository: Repository): RepositoryFetchStatus {
+  private fun fetchFileAndHashes(
+    fileSpec: FileSpec,
+    repository: Repository
+  ): RepositoryFetchStatus {
     // TODO profile and make this a parallel fetch
     val mainFetchResult = fetchFile(fileSpec, repository, fileSpec.path)
 

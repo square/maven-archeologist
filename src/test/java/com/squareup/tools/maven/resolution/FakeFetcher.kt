@@ -16,20 +16,19 @@
 package com.squareup.tools.maven.resolution
 
 import com.google.common.truth.Truth.assertThat
-
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.NOT_FOUND
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.SUCCESSFUL
-import org.apache.maven.model.Repository
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.MessageDigest
 import java.util.concurrent.atomic.AtomicInteger
+import org.apache.maven.model.Repository
 
 internal class FakeFetcher(
-    cacheDir: Path,
-    val repositoriesContent: Map<String, Map<String, String>> = mapOf()
-): AbstractArtifactFetcher(cacheDir) {
+  cacheDir: Path,
+  val repositoriesContent: Map<String, Map<String, String>> = mapOf()
+) : AbstractArtifactFetcher(cacheDir) {
   private val callCounter = AtomicInteger()
   public val count get() = callCounter.get()
   override fun fetchFile(
