@@ -33,10 +33,13 @@ val resolver = ArtifactResolver() // creates a resolver with repo list defaultin
 val artifact = resolver.artifactFor("com.google.guava:guava:27.1-jre") // returns Artifact
 val resolvedArtifact = resolver.resolveArtifact(artifact) // returns ResolvedArtifact
 val result = resolver.download(resolvedArtifact) // returns FetchStatus
+
+// if you care about whether it was a cache-hit or not, do this. Otherwise test for "is SUCCESSFUL"
 when (result) {
-  is SUCCESSFUL.FOUND_IN_CACHE -> ""
+  is SUCCESSFUL.FOUND_IN_CACHE -> { /* win! */ }
+  is SUCCESSFUL.SUCESSFULLY_FETCHED -> { /* win, but remotely! */ }
+  else -> { /* Handle error */ }
 }
-if (result is SUCCESSFUL) { /* win! */ }
 ```
 
 ### Adding Repositories
