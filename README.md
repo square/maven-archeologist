@@ -33,6 +33,9 @@ val resolver = ArtifactResolver() // creates a resolver with repo list defaultin
 val artifact = resolver.artifactFor("com.google.guava:guava:27.1-jre") // returns Artifact
 val resolvedArtifact = resolver.resolveArtifact(artifact) // returns ResolvedArtifact
 val result = resolver.download(resolvedArtifact) // returns FetchStatus
+when (result) {
+  is SUCCESSFUL.FOUND_IN_CACHE -> ""
+}
 if (result is SUCCESSFUL) { /* win! */ }
 ```
 
@@ -61,7 +64,7 @@ By default, artifacts are cached in `${HOME}/.m2/repository`, but this can be ch
 instance) like so:
 
 ```kotlin
-val resolver = ArtifactResolver(cacheDir = fs.getPath("/some/cache/dir")
+val resolver = ArtifactResolver(cacheDir = fs.getPath("/some/cache/dir"))
 ```
 ## Demo CLI
 
@@ -79,17 +82,46 @@ bazel run //:resolver -- --local_maven_cache /path/to/cache some:artifact:1 anot
   * Pre-fetching artifacts to permit later off-line function.
   * ...
 
+## Core Capabilities
+
+  * Basic wrapping of Maven APIs into much simpler conveniences
+  * Basic artifact resolution to a maven model object
+  * Downloading of POM and artifact files
+    - file caching in (and resolution from) a maven-style local repository (cache)
+  * md5/sha1 validation for files published with the accompanying hash files (maven-style)
+  * Resolving from multiple/different/custom repositories
+    - by default, for security, pinning the list of repositories to the given set, ignoring
+      attempts from maven metadata to add more repositories, though this can be overridden
+  * Metadata about the resolution/fetch operations, including whether the file(s) were satisfied
+    from the cache or a remote fetch occurred.
+  * Basic example CLI to resolve artifacts and find dependencies.
+
 ## Known Limitations
 
   * Does not download sub-artifacts (-sources.jar) or classifiers (yet)
-  * Does not do any traversal (this can be done in calling code) or transitive activity
-  * Does not do any multithreading (calling code can build a parallel graph walk around it)
+  * Does not do any traversal (this can be done in calling code) of dependencies or other
+    transitive operations
+  * No multithreaded operations (though calling code can build a parallel graph walk around it)
+    - file writes DO use a "write to temp file, atomically move" strategy, so generally the
+      library should be tolerant of race-condition in resolution/download.
   * Has a crappy heuristic (with a hack for bundle) for converting packaging->suffix
     - Doesn't resolve plugin metadata that might configure things like that.
   * The CLI is super limited as a demo-app.
   * Basic functionality is tested, but coverage is weak.
-  * Wraps the Maven APIs, but might need some more ability to configure them (without bailing
-    out of the wrapper infrastructure entirely)
+  * Might need some more ability to configure them (without bailing out of the wrapper
+    infrastructure entirely)
+
+## Planned features
+
+> Note: These are all doable in calling code, but some of these should be useful in the core
+> library.
+
+  * transitive/bulk operations on artifacts
+    - pre-download all files needed to do off-line resolution later
+    - gather the full maven universe implied by the offered initial artifacts
+    - identify diamond dependency skew and other dependency conflicts
+  * Download -sources artifacts and possibly other sub-artifacts.
+  * more useful CLI functionality
 
 ## License
 

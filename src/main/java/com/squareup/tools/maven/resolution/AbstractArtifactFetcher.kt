@@ -71,11 +71,11 @@ abstract class AbstractArtifactFetcher(protected val cacheDir: Path): ArtifactFe
         !fileSpec.localFile.exists -> if (errors.isEmpty()) RepositoryFetchStatus.NOT_FOUND else FetchStatus.ERROR(
             errors)
         !fileSpec.validateHashes() -> FetchStatus.INVALID_HASH
-        else -> RepositoryFetchStatus.SUCCESSFUL
+        else -> RepositoryFetchStatus.SUCCESSFUL.SUCCESSFULLY_FETCHED
       }
     } else {
       info { "Found cached file ${fileSpec.localFile}" }
-      return RepositoryFetchStatus.SUCCESSFUL
+      return RepositoryFetchStatus.SUCCESSFUL.FOUND_IN_CACHE
     }
   }
 

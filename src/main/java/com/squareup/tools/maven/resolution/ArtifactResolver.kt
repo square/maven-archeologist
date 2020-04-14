@@ -150,7 +150,7 @@ class ArtifactResolver(
           systemProperties = System.getProperties()
         }
     val builder: ModelBuildingResult = modelBuilder.build(req)
-    return ResolvedArtifact(builder.effectiveModel, cacheDir)
+    return ResolvedArtifact(builder.effectiveModel, cacheDir, fetched is SUCCESSFUL.FOUND_IN_CACHE)
   }
 
   /**

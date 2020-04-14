@@ -20,7 +20,10 @@ import org.apache.maven.model.Repository
 sealed class FetchStatus {
   sealed class RepositoryFetchStatus: FetchStatus() {
     /** Artifact file successfully fetched and validated */
-    object SUCCESSFUL: RepositoryFetchStatus()
+    sealed class SUCCESSFUL: RepositoryFetchStatus() {
+      object FOUND_IN_CACHE: SUCCESSFUL()
+      object SUCCESSFULLY_FETCHED: SUCCESSFUL()
+    }
 
     /** Artifact file could not be found in any repositories given to the fetcher. */
     object NOT_FOUND: RepositoryFetchStatus()

@@ -32,7 +32,7 @@ open class Artifact
     val groupId: String,
     val artifactId: String,
     val version: String,
-    private val cacheDir: Path
+    cacheDir: Path
   ) {
 
   val coordinate = "$groupId:$artifactId:$version"
@@ -42,13 +42,26 @@ open class Artifact
   val pom = PomFile(this, cacheDir)
 }
 
-class ResolvedArtifact(val model: Model, cacheDir: Path):
+/** Represents an artifact whose metadata has been fully resolved by maven */
+class ResolvedArtifact(
+  /** The underlying maven model object. */
+  val model: Model,
+  /** The cache directory into which this file was fetched (or from which it was read) */
+  cacheDir: Path,
+  /** Whether this artifact metadata was remotely fetched or satisfied from the local cache. */
+  val cached: Boolean = false
+):
     Artifact(model.groupId, model.artifactId, model.version, cacheDir) {
   val main = ArtifactFile(this, cacheDir)
 
   val suffix = packagingToSuffix.getOrDefault(model.packaging, model.packaging)
 }
 
+/**
+ * An abstract file definition, including a relative path, local expected path, maven
+ * coordinate, etc. Generally users won't deal with this abstraction. Examples would be
+ * [PomFile] or [ArtifactFile]
+ */
 interface FileSpec {
   /** The relative path (in default maven layout style) of a file (pom file, artifact, etc) */
   val path: Path
@@ -113,9 +126,5 @@ class ArtifactFile(
 }
 
 val Model.snapshot get() = version.endsWith("-SNAPSHOT")
-
-val Model.type get(): String = packagingToSuffix.getOrDefault(packaging, packaging)
-
-val Model.coordinates get(): String = "$groupId:$artifactId:$version"
 
 internal val String.groupPath get() = replace(".", "/")

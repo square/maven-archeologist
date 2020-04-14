@@ -48,8 +48,7 @@ class HttpArtifactFetcher(
     repository: Repository,
     path: Path): RepositoryFetchStatus {
     val url = "${repository.url}/$path"
-    val request: Request = Builder().url(url)
-        .build()
+    val request: Request = Builder().url(url).build()
     return client.newCall(request)
         .also { info { "About to fetch $url" } }
         .execute()
@@ -61,7 +60,7 @@ class HttpArtifactFetcher(
                 try {
                   var localFile = cacheDir.resolve(path)
                   safeWrite(localFile, body)
-                  if (fileSpec.localFile.exists) SUCCESSFUL
+                  if (fileSpec.localFile.exists) SUCCESSFUL.SUCCESSFULLY_FETCHED
                   else FETCH_ERROR(
                       repository = repository.id,
                       message = "File downloaded but did not write successfully."
