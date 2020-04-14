@@ -50,8 +50,7 @@ class ResolvedArtifact(
   cacheDir: Path,
   /** Whether this artifact metadata was remotely fetched or satisfied from the local cache. */
   val cached: Boolean = false
-) :
-    Artifact(model.groupId, model.artifactId, model.version, cacheDir) {
+) : Artifact(model.groupId, model.artifactId, model.version, cacheDir) {
   val main = ArtifactFile(this, cacheDir)
 
   val suffix = packagingToSuffix.getOrDefault(model.packaging, model.packaging)
