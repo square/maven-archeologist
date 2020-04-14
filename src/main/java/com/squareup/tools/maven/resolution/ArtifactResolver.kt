@@ -20,16 +20,16 @@ import com.squareup.tools.maven.resolution.FetchStatus.INVALID_HASH
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.FETCH_ERROR
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.NOT_FOUND
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.SUCCESSFUL
+import java.io.IOException
+import java.lang.IllegalArgumentException
+import java.nio.file.FileSystems
+import java.nio.file.Path
 import org.apache.maven.model.Repository
 import org.apache.maven.model.building.DefaultModelBuilderFactory
 import org.apache.maven.model.building.DefaultModelBuildingRequest
 import org.apache.maven.model.building.ModelBuildingRequest
 import org.apache.maven.model.building.ModelBuildingResult
 import org.apache.maven.model.resolution.ModelResolver
-import java.io.IOException
-import java.lang.IllegalArgumentException
-import java.nio.file.FileSystems
-import java.nio.file.Path
 
 /**
  * The main entry point to the library, which wraps (and mostly hides) the maven resolution
@@ -145,12 +145,12 @@ class ArtifactResolver(
         .apply {
           modelResolver = resolver
           pomFile = artifact.pom.localFile.toFile()
-          setProcessPlugins(false) // Auto-property inference is broken for this property, so use function.
+          setProcessPlugins(false) // Auto-property inference is broken for this property.
           validationLevel = ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL
           systemProperties = System.getProperties()
         }
     val builder: ModelBuildingResult = modelBuilder.build(req)
-    return ResolvedArtifact(builder.effectiveModel, cacheDir)
+    return ResolvedArtifact(builder.effectiveModel, cacheDir, fetched is SUCCESSFUL.FOUND_IN_CACHE)
   }
 
   /**
@@ -169,8 +169,8 @@ class ArtifactResolver(
    * Resolves and downloads the given artifact's pom file and main artifact file.
    *
    * The result is a [Pair<Path, Path] with the first item being the local path to the pom, and
-   * the second being the local path to the artifact file. This version throws an IOException if the
-   * download fails (either for the pom or the artifact), or if the downloaded files fail hash
+   * the second being the local path to the artifact file. This version throws an IOException if
+   * the download fails (either for the pom or the artifact), or if the downloaded files fail hash
    * validation.
    */
   @Throws(IOException::class)
@@ -179,7 +179,8 @@ class ArtifactResolver(
     val resolvedArtifact = resolveArtifact(artifact)
         ?: throw IOException("Could not resolve pom file for $coordinate")
     val status = downloadArtifact(resolvedArtifact)
-    if (status is SUCCESSFUL) return resolvedArtifact.pom.localFile to resolvedArtifact.main.localFile
+    if (status is SUCCESSFUL)
+      return resolvedArtifact.pom.localFile to resolvedArtifact.main.localFile
     else throw IOException("Could not download artifact for $coordinate: $status")
   }
 }

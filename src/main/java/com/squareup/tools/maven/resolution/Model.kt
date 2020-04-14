@@ -15,8 +15,8 @@
  */
 package com.squareup.tools.maven.resolution
 
-import org.apache.maven.model.Model
 import java.nio.file.Path
+import org.apache.maven.model.Model
 
 private val packagingToSuffix = mapOf(
     "bundle" to "jar"
@@ -32,7 +32,7 @@ open class Artifact
     val groupId: String,
     val artifactId: String,
     val version: String,
-    private val cacheDir: Path
+    cacheDir: Path
   ) {
 
   val coordinate = "$groupId:$artifactId:$version"
@@ -42,13 +42,25 @@ open class Artifact
   val pom = PomFile(this, cacheDir)
 }
 
-class ResolvedArtifact(val model: Model, cacheDir: Path):
-    Artifact(model.groupId, model.artifactId, model.version, cacheDir) {
+/** Represents an artifact whose metadata has been fully resolved by maven */
+class ResolvedArtifact(
+  /** The underlying maven model object. */
+  val model: Model,
+  /** The cache directory into which this file was fetched (or from which it was read) */
+  cacheDir: Path,
+  /** Whether this artifact metadata was remotely fetched or satisfied from the local cache. */
+  val cached: Boolean = false
+) : Artifact(model.groupId, model.artifactId, model.version, cacheDir) {
   val main = ArtifactFile(this, cacheDir)
 
   val suffix = packagingToSuffix.getOrDefault(model.packaging, model.packaging)
 }
 
+/**
+ * An abstract file definition, including a relative path, local expected path, maven
+ * coordinate, etc. Generally users won't deal with this abstraction. Examples would be
+ * [PomFile] or [ArtifactFile]
+ */
 interface FileSpec {
   /** The relative path (in default maven layout style) of a file (pom file, artifact, etc) */
   val path: Path
@@ -69,7 +81,9 @@ interface FileSpec {
   val artifact: Artifact
 
   fun validateHashes(): Boolean {
-    assert(localFile.exists) { "Attempted to validate hashes on an un-fetched pom file $localFile." }
+    assert(localFile.exists) {
+      "Attempted to validate hashes on an un-fetched pom file $localFile."
+    }
     return validateHash(localFile, "sha1", localFile.sha1File, Path::sha1) &&
         validateHash(localFile, "md5", localFile.md5File, Path::md5)
   }
@@ -95,7 +109,7 @@ class PomFile
 class ArtifactFile(
   override val artifact: ResolvedArtifact,
   private val cacheDir: Path
-): FileSpec {
+) : FileSpec {
   override val coordinate: String get() = artifact.coordinate
 
   override val path: Path by lazy {
@@ -113,9 +127,5 @@ class ArtifactFile(
 }
 
 val Model.snapshot get() = version.endsWith("-SNAPSHOT")
-
-val Model.type get(): String = packagingToSuffix.getOrDefault(packaging, packaging)
-
-val Model.coordinates get(): String = "$groupId:$artifactId:$version"
 
 internal val String.groupPath get() = replace(".", "/")

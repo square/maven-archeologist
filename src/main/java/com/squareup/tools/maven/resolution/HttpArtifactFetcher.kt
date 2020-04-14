@@ -19,12 +19,12 @@ import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.FETCH_ERROR
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.NOT_FOUND
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.SUCCESSFUL
+import java.io.IOException
+import java.nio.file.Path
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Request.Builder
 import org.apache.maven.model.Repository
-import java.io.IOException
-import java.nio.file.Path
 
 /**
  * An engine for performing fetches against maven repositories.  Generally this class' methods will
@@ -41,15 +41,15 @@ import java.nio.file.Path
 class HttpArtifactFetcher(
   cacheDir: Path,
   private val client: OkHttpClient = OkHttpClient()
-): AbstractArtifactFetcher(cacheDir) {
+) : AbstractArtifactFetcher(cacheDir) {
 
   override fun fetchFile(
     fileSpec: FileSpec,
     repository: Repository,
-    path: Path): RepositoryFetchStatus {
+    path: Path
+  ) : RepositoryFetchStatus {
     val url = "${repository.url}/$path"
-    val request: Request = Builder().url(url)
-        .build()
+    val request: Request = Builder().url(url).build()
     return client.newCall(request)
         .also { info { "About to fetch $url" } }
         .execute()
@@ -61,7 +61,7 @@ class HttpArtifactFetcher(
                 try {
                   var localFile = cacheDir.resolve(path)
                   safeWrite(localFile, body)
-                  if (fileSpec.localFile.exists) SUCCESSFUL
+                  if (fileSpec.localFile.exists) SUCCESSFUL.SUCCESSFULLY_FETCHED
                   else FETCH_ERROR(
                       repository = repository.id,
                       message = "File downloaded but did not write successfully."
