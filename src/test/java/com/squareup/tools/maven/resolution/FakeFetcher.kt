@@ -47,7 +47,7 @@ internal class FakeFetcher(
     Files.createDirectories(localFile.parent)
     Files.write(localFile, fileContent.toByteArray())
     assertThat(localFile.readText() == fileContent)
-    return SUCCESSFUL
+    return SUCCESSFUL.FOUND_IN_CACHE
   }
 }
 
