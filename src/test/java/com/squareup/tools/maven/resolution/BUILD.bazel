@@ -24,6 +24,18 @@ kt_jvm_library(
 )
 
 kt_jvm_test(
+    name = "MavenVersionTest",
+    srcs = ["MavenVersionTest.kt"],
+    test_class = "com.squareup.tools.maven.resolution.MavenVersionTest",
+    friends = ["//src/main/java/com/squareup/tools/maven/resolution"],
+    deps = [
+        "//src/main/java/com/squareup/tools/maven/resolution",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)
+
+kt_jvm_test(
     name = "ResolutionTest",
     srcs = ["ResolutionTest.kt"],
     friend = ":testlib",
