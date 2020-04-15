@@ -70,7 +70,7 @@ class MavenVersion private constructor(
   }
 
   companion object {
-    fun from(raw: String) = with(raw.split(".")) {
+    @JvmStatic fun from(raw: String) = with(raw.split(".")) {
       MavenVersion(raw, this, this.last().endsWith("-SNAPSHOT"))
     }
   }
