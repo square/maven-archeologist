@@ -5,9 +5,13 @@ wraps the Maven resolver APIs and provides simple HTTP-based resolution. From th
 tools can be constructed, which require obtaining (and locally caching) maven artifacts, resolving
 the "effective project model", validating hashes, etc.
 
+***Latest Release:** 0.0.2*<br/>
+***Maven Artifact:** com.squareup.tools.build:maven-archeologist:0.0.2*
+
 ## Contents
 
   * [Usage](#usage)
+    + [Add to a build](#add-to-a-build)
     + [Simplest Usage](#simplest-usage)
     + [Resolving Metadata](#resolving-metadata)
     + [Adding Repositories](#adding-repositories)
@@ -26,6 +30,28 @@ The main entry point to the library, which wraps (and mostly hides) the Maven re
 infrastructure, is `ArtifactResolver`.  It has two ways to use it - the simple one which just
 downloads the relevant artifact and its POM file, and returns the file locations, or a slightly
 more nuanced API, which lets you get resolved Maven metadata (but doesn't download the artifact).
+
+### Add to a build
+
+Maven-Archeologist is published as `com.squareup.tools.build:maven-archeologist:0.0.2` in
+the Maven Central repository. Use your build system's standard import mechanism to bring in
+that artifact. e.g.:
+
+Gradle:
+```groovy
+dependencies {
+  implementation 'com.squareup.tools.build:maven-archeologist:0.0.2'
+}
+```
+
+Maven:
+```xml
+  <dependency>
+    <groupId>com.squareup.tools.build</groupId>
+    <artifactId>maven-archeologist</artifactId>
+    <version>0.0.2</version>
+  </dependency>
+```
 
 ### Simplest Usage
 
