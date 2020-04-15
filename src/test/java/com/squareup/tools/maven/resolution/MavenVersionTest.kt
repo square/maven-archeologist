@@ -130,11 +130,11 @@ class MavenVersionTest {
   }
 
   @Test fun `test VersionElement no dots`() {
-    assertThrows(IllegalArgumentException::class.java){ ve("5.1") }
+    assertThrows(IllegalArgumentException::class.java) { ve("5.1") }
   }
 
-  private fun ve(raw: String, terminal: Boolean = true) : VersionElement =
+  private fun ve(raw: String, terminal: Boolean = true): VersionElement =
       VersionElement.from(raw, terminal)
 
-  private fun v(raw: String) : MavenVersion = MavenVersion.from(raw)
+  private fun v(raw: String): MavenVersion = MavenVersion.from(raw)
 }

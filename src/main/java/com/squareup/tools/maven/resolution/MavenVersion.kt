@@ -29,11 +29,11 @@ class MavenVersion private constructor(
   private val raw: String,
   private val elements: List<String>,
   val snapshot: Boolean = false
-): Comparable<MavenVersion>{
+) : Comparable<MavenVersion> {
   override fun toString() = raw
   override fun equals(other: Any?) = other is MavenVersion && compareTo(other) == EQUAL
   override fun hashCode() = 31 + raw.hashCode()
-  override fun compareTo(other: MavenVersion) : Int {
+  override fun compareTo(other: MavenVersion): Int {
     if (raw == other.raw) return EQUAL // simple obvious case.
     // loop through the next-to-last of the shortest.
     val minLength = min(elements.size, other.elements.size)
@@ -110,7 +110,7 @@ internal data class VersionElement(
   }
 }
 
-internal fun String.numberComparison(other: String) : Int? {
+internal fun String.numberComparison(other: String): Int? {
   val a = this.toIntOrNull()
   val b = other.toIntOrNull()
   return if (a != null && b != null) a.compareTo(b)
@@ -119,5 +119,3 @@ internal fun String.numberComparison(other: String) : Int? {
 
 internal fun String.numberOrStringComparison(other: String) =
     numberComparison(other) ?: this.compareTo(other)
-
-

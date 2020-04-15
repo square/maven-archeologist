@@ -15,19 +15,22 @@ load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library", "kt_jvm_test
 kt_jvm_library(
     name = "testlib",
     testonly = True,
-    srcs = glob(["*.kt"], exclude = ["*Test.kt"]),
+    srcs = glob(
+        ["*.kt"],
+        exclude = ["*Test.kt"],
+    ),
     friend = "//src/main/java/com/squareup/tools/maven/resolution",
     deps = [
         "//src/main/java/com/squareup/tools/maven/resolution",
         "@maven//com/google/truth",
-    ]
+    ],
 )
 
 kt_jvm_test(
     name = "MavenVersionTest",
     srcs = ["MavenVersionTest.kt"],
-    test_class = "com.squareup.tools.maven.resolution.MavenVersionTest",
     friends = ["//src/main/java/com/squareup/tools/maven/resolution"],
+    test_class = "com.squareup.tools.maven.resolution.MavenVersionTest",
     deps = [
         "//src/main/java/com/squareup/tools/maven/resolution",
         "@maven//com/google/truth",
