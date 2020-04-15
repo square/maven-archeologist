@@ -74,7 +74,8 @@ val resolver = ArtifactResolver(cacheDir = fs.getPath("/some/cache/dir"))
 
 maven-archeologist has a convenience for representing maven versions in a way that they can be
 compared according to semantic versioning, or at least the maven 3 variant, rather than merely
-lexically.
+lexically. MavenVersion extends `Comparable<MavenVersion>` and can be used in comparison checks,
+ordered collections, etc.
 
 ```kotlin
 val versions = listOf(
