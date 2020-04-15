@@ -133,6 +133,28 @@ class MavenVersionTest {
     assertThrows(IllegalArgumentException::class.java) { ve("5.1") }
   }
 
+  @Test fun `test sorted MavenVersions`() {
+    val actual = listOf(
+      MavenVersion.from("2.3.5-SNAPSHOT"),
+      MavenVersion.from("2.3.5"),
+      MavenVersion.from("2.0"),
+      MavenVersion.from("2a.0"),
+      MavenVersion.from("2.0-beta"),
+      MavenVersion.from("2.0-beta-SNAPSHOT"),
+      MavenVersion.from("2.3.5.2")
+    ).sorted()
+    val expected = listOf(
+      MavenVersion.from("2.0-beta-SNAPSHOT"),
+      MavenVersion.from("2.0-beta"),
+      MavenVersion.from("2.0"),
+      MavenVersion.from("2.3.5-SNAPSHOT"),
+      MavenVersion.from("2.3.5"),
+      MavenVersion.from("2.3.5.2"),
+      MavenVersion.from("2a.0") // because it's non-numeric, and so lexically comes after 2
+    )
+    assertThat(actual).isEqualTo(expected)
+  }
+
   private fun ve(raw: String, terminal: Boolean = true): VersionElement =
       VersionElement.from(raw, terminal)
 
