@@ -26,13 +26,13 @@ const val EQUAL = 0
  * [in this article](https://blog.soebes.de/blog/2017/02/04/apache-maven-how-version-comparison-works).
  */
 class MavenVersion private constructor(
-  val raw: String,
-  val elements: List<String>,
+  private val raw: String,
+  private val elements: List<String>,
   val snapshot: Boolean = false
 ): Comparable<MavenVersion>{
   override fun toString() = raw
   override fun equals(other: Any?) = other is MavenVersion && compareTo(other) == EQUAL
-  override fun hashCode() = raw.hashCode()
+  override fun hashCode() = 31 + raw.hashCode()
   override fun compareTo(other: MavenVersion) : Int {
     if (raw == other.raw) return EQUAL // simple obvious case.
     // loop through the next-to-last of the shortest.
@@ -52,21 +52,14 @@ class MavenVersion private constructor(
         other.elements.size == minLength)
     // test the last element
     a.compareTo(b).let { comparison -> if (comparison != EQUAL) return comparison }
-    // so far, the equivalent elements all match.
-    when {
+
+    // so far, the equivalent elements all match. Now check to see if one has more elements
+    // (1.3.5 > 1.3)
+    return when {
       elements.size > other.elements.size -> return GREATER_THAN // 1.3.5 > 1.3
       elements.size < other.elements.size -> return LESS_THAN // 1.3 < 1.3.5
-      else -> {
-        // same number of elements, check qualifiers then (if otherwise equal) snapshots.
-        val thisSplit = elements.last().removeSuffix("-SNAPSHOT").split("-", limit = 1)
-        val otherSplit = elements.last().removeSuffix("-SNAPSHOT").split("-", limit = 1)
-        when {
-          thisSplit.size < otherSplit.size -> return GREATER_THAN // 1.3.5 > 1.3.5-a
-          thisSplit.size > otherSplit.size -> return LESS_THAN // 1.3.5-a < 1.3.5
-        }
-      }
+      else -> EQUAL
     }
-    return EQUAL
   }
 
   companion object {
@@ -75,7 +68,6 @@ class MavenVersion private constructor(
     }
   }
 }
-
 
 internal data class VersionElement(
   val core: String,
