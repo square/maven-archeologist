@@ -5,8 +5,11 @@ wraps the Maven resolver APIs and provides simple HTTP-based resolution. From th
 tools can be constructed, which require obtaining (and locally caching) maven artifacts, resolving
 the "effective project model", validating hashes, etc.
 
-***Latest Release:** 0.0.2*<br/>
-***Maven Artifact:** com.squareup.tools.build:maven-archeologist:0.0.2*
+***Latest Release:*** [![Maven Central][maven-badge]][maven-search] [![Travis CI][travis-badge]][travis-badge]
+
+[maven-badge]: https://maven-badges.herokuapp.com/maven-central/com.squareup.tools.build/maven-archeologist/badge.svg?style=plastic
+[maven-search]: https://search.maven.org/artifact/com.squareup.tools.build/maven-archeologist
+[travis-badge]: https://img.shields.io/travis/square/maven-archeologist?label=master&style=plastic
 
 ## Contents
 
@@ -33,14 +36,14 @@ more nuanced API, which lets you get resolved Maven metadata (but doesn't downlo
 
 ### Add to a build
 
-Maven-Archeologist is published as `com.squareup.tools.build:maven-archeologist:0.0.2` in
+Maven-Archeologist is published as `com.squareup.tools.build:maven-archeologist:0.0.3` in
 the Maven Central repository. Use your build system's standard import mechanism to bring in
 that artifact. e.g.:
 
 Gradle:
 ```groovy
 dependencies {
-  implementation 'com.squareup.tools.build:maven-archeologist:0.0.2'
+  implementation 'com.squareup.tools.build:maven-archeologist:0.0.3'
 }
 ```
 
@@ -49,7 +52,7 @@ Maven:
   <dependency>
     <groupId>com.squareup.tools.build</groupId>
     <artifactId>maven-archeologist</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
   </dependency>
 ```
 
