@@ -1,9 +1,24 @@
 # Maven archeology
-
+  
 A library to make resolving maven artifacts (from various repositories) easy.  The library itself
 wraps the Maven resolver APIs and provides simple HTTP-based resolution. From this any number of
 tools can be constructed, which require obtaining (and locally caching) maven artifacts, resolving
 the "effective project model", validating hashes, etc.
+
+## Contents
+
+  * [Usage](#usage)
+    + [Simplest Usage](#simplest-usage)
+    + [Resolving Metadata](#resolving-metadata)
+    + [Adding Repositories](#adding-repositories)
+    + [Local Artifact Cache](#local-artifact-cache)
+    + [Comparing Artifact Versions](#comparing-artifact-versions)
+  * [Demo CLI](#demo-cli)
+  * [Possible uses](#possible-uses)
+  * [Core Capabilities](#core-capabilities)
+  * [Known Limitations](#known-limitations)
+  * [Planned features](#planned-features)
+  * [License](#license)
 
 ## Usage
 
@@ -61,16 +76,16 @@ val resolver = ArtifactResolver(repositories = listOf(rep1, rep2))
 Reasonably popular repositories have been pre-defined in the `Repositories` type, e.g.
 `Repositories.MAVEN_CENTRAL`
 
-### Local Artifact Cache (Maven Local Repository)
+### Local Artifact Cache
 
-By default, artifacts are cached in `${HOME}/.m2/repository`, but this can be changed (per resolver
-instance) like so:
+By default, artifacts are cached in `${HOME}/.m2/repository`, exactly as Maven 3 or Gradle would do,
+but this can be changed (per resolver instance) like so:
 
 ```kotlin
 val resolver = ArtifactResolver(cacheDir = fs.getPath("/some/cache/dir"))
 ```
 
-### Comparing Versions
+### Comparing Artifact Versions
 
 maven-archeologist has a convenience for representing maven versions in a way that they can be
 compared according to semantic versioning, or at least the maven 3 variant, rather than merely
