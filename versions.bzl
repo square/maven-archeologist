@@ -25,7 +25,7 @@ LIBRARY_METADATA = metadata(
     version = LIBRARY_VERSION,
     target = "//src/main/java/com/squareup/tools/maven/resolution",
     license = "Apache-2.0",  # SPDX token for Apache 2.0
-    github_slug = "square/maven-architect",
+    github_slug = "square/maven-archeologist",
     developers = [developer("cgruber", "Christian Gruber", "gruber@squareup.com")],
 )
 
