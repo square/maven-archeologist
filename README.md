@@ -1,5 +1,7 @@
-# Maven archeology
-  
+# Maven Archeologist
+
+> Making handling maven Artifacts easy
+
 A library to make resolving maven artifacts (from various repositories) easy.  The library itself
 wraps the Maven resolver APIs and provides simple HTTP-based resolution. From this any number of
 tools can be constructed, which require obtaining (and locally caching) maven artifacts, resolving
@@ -212,3 +214,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
+
+## About the project
+
+### Why Archeologist?
+
+Because the library handles artifacts, and references to certain movies starring Harrison Ford
+might garner trademark concerns.
+
+### Why not Archaeologist?
+
+Because 'murica! More seriously, both spellings are accepted english, and while the primary author
+is Canadian, he lives in the US. 
