@@ -38,14 +38,14 @@ more nuanced API, which lets you get resolved Maven metadata (but doesn't downlo
 
 ### Add to a build
 
-Maven-Archeologist is published as `com.squareup.tools.build:maven-archeologist:0.0.3` in
+Maven-Archeologist is published as `com.squareup.tools.build:maven-archeologist:0.0.3.1` in
 the Maven Central repository. Use your build system's standard import mechanism to bring in
 that artifact. e.g.:
 
 Gradle:
 ```groovy
 dependencies {
-  implementation 'com.squareup.tools.build:maven-archeologist:0.0.3'
+  implementation 'com.squareup.tools.build:maven-archeologist:0.0.3.1'
 }
 ```
 
@@ -54,7 +54,7 @@ Maven:
   <dependency>
     <groupId>com.squareup.tools.build</groupId>
     <artifactId>maven-archeologist</artifactId>
-    <version>0.0.3</version>
+    <version>0.0.3.1</version>
   </dependency>
 ```
 
