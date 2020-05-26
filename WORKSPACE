@@ -49,6 +49,6 @@ load("@maven_repository_rules//maven:maven.bzl", "maven_repository_specification
 
 maven_repository_specification(
     name = "maven",
-    cache_poms_insecurely = True,
     artifacts = maven_artifacts(),
+    repository_urls = {"central": "https://repo1.maven.org/maven2"},
 )
