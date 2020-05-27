@@ -24,12 +24,12 @@ jobs:
       uses: actions/cache@v2
       with:
         path: "/home/runner/.cache/bazel"
-        key: bazel
+        key: bazel-linux
     - name: Mount maven cache
       uses: actions/cache@v2
       with:
         path: "/home/runner/.m2/repository"
-        key: maven-local
+        key: maven
     - name: Install bazelisk
       run: |
         curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.4.0/bazelisk-linux-amd64"
@@ -54,12 +54,12 @@ jobs:
       uses: actions/cache@v2
       with:
         path: "/home/runner/.cache/bazel"
-        key: bazel
+        key: bazel-macos
     - name: Mount maven cache
       uses: actions/cache@v2
       with:
         path: "/home/runner/.m2/repository"
-        key: maven-local
+        key: maven
     - name: Install bazelisk
       run: |
         curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.4.0/bazelisk-darwin-amd64"
