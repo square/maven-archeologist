@@ -189,9 +189,15 @@ class ArtifactResolver(
     return fetcher.fetchFile(subArtifact, repositories = repositories)
   }
 
+  /**
+   * Resolves and downloads the given artifact's pom file and main artifact file.
+   *
+   * > NOTE: This version is deprecated and will ultimately be deleted. Please use
+   * > [download(String,Boolean)].
+   */
   @Deprecated(
     "New method has a more robust download result type",
-    replaceWith = ReplaceWith("download(coordinate, false)"),
+    replaceWith = ReplaceWith("download(coordinate, downloadSources = false)"),
     level = WARNING
   )
   @Throws(IOException::class)
