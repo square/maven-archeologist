@@ -35,7 +35,7 @@ jobs:
         curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.4.0/bazelisk-linux-amd64"
         mkdir -p "${GITHUB_WORKSPACE}/bin/"
         mv bazelisk-linux-amd64 "${GITHUB_WORKSPACE}/bin/bazel"
-        chmod +x "${GITHUB_WORKSPACE}/bin/bazel"
+        chmod a+x "${GITHUB_WORKSPACE}/bin/bazel"
     - name: Build All
       run: |
         "${GITHUB_WORKSPACE}/bin/bazel" build //...
@@ -65,7 +65,7 @@ jobs:
         curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.4.0/bazelisk-darwin-amd64"
         mkdir -p "${GITHUB_WORKSPACE}/bin/"
         mv bazelisk-darwin-amd64 "${GITHUB_WORKSPACE}/bin/bazel"
-        chmod +x "${GITHUB_WORKSPACE}/bin/bazel"
+        chmod a+x "${GITHUB_WORKSPACE}/bin/bazel"
     - name: Build All
       run: |
         "${GITHUB_WORKSPACE}/bin/bazel" build //...
