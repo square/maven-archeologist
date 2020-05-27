@@ -16,6 +16,7 @@
 package com.squareup.tools.maven.resolution
 
 import org.apache.maven.model.Repository
+import kotlin.DeprecationLevel.WARNING
 
 sealed class FetchStatus {
   sealed class RepositoryFetchStatus : FetchStatus() {
@@ -57,10 +58,13 @@ interface ArtifactFetcher {
    */
   fun fetchPom(pom: PomFile, repositories: List<Repository>): FetchStatus
 
+  @Deprecated("Renamed", replaceWith = ReplaceWith("fetchFile"), level = WARNING)
+  fun fetchArtifact(artifactFile: ArtifactFile, repositories: List<Repository>): FetchStatus
+
   /**
    * Performs a fetch against any repositories offered (in order), downloads the artifact file (and any
    * hash files), and if it finds it, performs validation. Returns false if the file wasn't fetched,
    * or if the file's validation failed.
    */
-  fun fetchArtifact(artifactFile: ArtifactFile, repositories: List<Repository>): FetchStatus
+  fun fetchFile(fetchFile: FileSpec, repositories: List<Repository>): FetchStatus
 }

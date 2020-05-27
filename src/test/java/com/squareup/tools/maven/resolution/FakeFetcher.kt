@@ -30,7 +30,7 @@ internal class FakeFetcher(
   val repositoriesContent: Map<String, Map<String, String>> = mapOf()
 ) : AbstractArtifactFetcher(cacheDir) {
   private val callCounter = AtomicInteger()
-  public val count get() = callCounter.get()
+  val count get() = callCounter.get()
   override fun fetchFile(
     fileSpec: FileSpec,
     repository: Repository,
@@ -55,7 +55,9 @@ internal fun MutableMap<String, String>.fakeArtifact(
   coordinate: String,
   suffix: String,
   pomContent: String,
-  fileContent: String
+  fileContent: String,
+  sourceContent: String? = null,
+  classifiedFiles: Map<String, Pair<String, String>> = mapOf() // classifier=(content=suffix)
 ): MutableMap<String, String> {
   val (groupId, artifactId, version) = coordinate.split(':')
   val groupPath = groupId.replace('.', '/')
@@ -67,6 +69,17 @@ internal fun MutableMap<String, String>.fakeArtifact(
   put("$dir/$filePrefix.$suffix", fileContent)
   put("$dir/$filePrefix.$suffix.sha1", fileContent.sha1())
   put("$dir/$filePrefix.$suffix.md5", fileContent.md5())
+  if (sourceContent != null) {
+    put("$dir/$filePrefix-sources.jar", sourceContent)
+    put("$dir/$filePrefix-sources.jar.sha1", sourceContent.sha1())
+    put("$dir/$filePrefix-sources.jar.md5", sourceContent.md5())
+  }
+  for ((classifier, value) in classifiedFiles) {
+    val (content, suffix) = value // can't nest destructuring
+    put("$dir/$filePrefix-$classifier.$suffix", content)
+    put("$dir/$filePrefix-$classifier.$suffix.sha1", content.sha1())
+    put("$dir/$filePrefix-$classifier.$suffix.md5", content.md5())
+  }
   return this
 }
 
