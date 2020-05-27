@@ -157,9 +157,9 @@ class ArtifactResolver(
   /**
    * Downloads the main artifact file, and returns a fetch status to indicate its success.
    *
-   * The resulting downloaded (or cached) file is available via [ResolvedArtifact.main.path]
+   * The resulting downloaded (or cached) file is available via [ResolvedArtifact.main.localFile]
    * (typically pointing at the file within the user's local maven repository, or another local
-   * repository if one is configured.
+   * repository if one is configured.)
    */
   fun downloadArtifact(artifact: ResolvedArtifact): FetchStatus {
     info { "Fetching ${artifact.coordinate}" }
@@ -169,9 +169,9 @@ class ArtifactResolver(
   /**
    * Downloads the artifact sources file, and returns a fetch status to indicate its success.
    *
-   * The resulting downloaded (or cached) file is available via [ResolvedArtifact.main.path]
+   * The resulting downloaded (or cached) file is available via [ResolvedArtifact.sources.localFile]
    * (typically pointing at the file within the user's local maven repository, or another local
-   * repository if one is configured.
+   * repository if one is configured.)
    */
   fun downloadSources(artifact: ResolvedArtifact): FetchStatus {
     info { "Fetching ${artifact.coordinate} sources" }
@@ -181,9 +181,9 @@ class ArtifactResolver(
   /**
    * Downloads the artifact sources file, and returns a fetch status to indicate its success.
    *
-   * The resulting downloaded (or cached) file is available via [ResolvedArtifact.main.path]
+   * The resulting downloaded (or cached) file is available via [ClassifiedFile.localFile]
    * (typically pointing at the file within the user's local maven repository, or another local
-   * repository if one is configured.
+   * repository if one is configured.)
    */
   fun downloadSubArtifact(subArtifact: ClassifiedFile): FetchStatus {
     return fetcher.fetchFile(subArtifact, repositories = repositories)
