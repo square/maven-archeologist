@@ -30,6 +30,7 @@ import org.apache.maven.model.building.DefaultModelBuildingRequest
 import org.apache.maven.model.building.ModelBuildingRequest
 import org.apache.maven.model.building.ModelBuildingResult
 import org.apache.maven.model.resolution.ModelResolver
+import kotlin.DeprecationLevel.WARNING
 
 /**
  * The main entry point to the library, which wraps (and mostly hides) the maven resolution
@@ -156,31 +157,77 @@ class ArtifactResolver(
   /**
    * Downloads the main artifact file, and returns a fetch status to indicate its success.
    *
-   * The resulting downloaded (or cached) file is available via [ResolvedArtifact.main.path]
+   * The resulting downloaded (or cached) file is available via [ResolvedArtifact.main.localFile]
    * (typically pointing at the file within the user's local maven repository, or another local
-   * repository if one is configured.
+   * repository if one is configured.)
    */
   fun downloadArtifact(artifact: ResolvedArtifact): FetchStatus {
     info { "Fetching ${artifact.coordinate}" }
-    return fetcher.fetchArtifact(artifact.main, repositories = repositories)
+    return fetcher.fetchFile(artifact.main, repositories = repositories)
+  }
+
+  /**
+   * Downloads the artifact sources file, and returns a fetch status to indicate its success.
+   *
+   * The resulting downloaded (or cached) file is available via [ResolvedArtifact.sources.localFile]
+   * (typically pointing at the file within the user's local maven repository, or another local
+   * repository if one is configured.)
+   */
+  fun downloadSources(artifact: ResolvedArtifact): FetchStatus {
+    info { "Fetching ${artifact.coordinate} sources" }
+    return fetcher.fetchFile(artifact.sources, repositories = repositories)
+  }
+
+  /**
+   * Downloads the artifact sources file, and returns a fetch status to indicate its success.
+   *
+   * The resulting downloaded (or cached) file is available via [ClassifiedFile.localFile]
+   * (typically pointing at the file within the user's local maven repository, or another local
+   * repository if one is configured.)
+   */
+  fun downloadSubArtifact(subArtifact: ClassifiedFile): FetchStatus {
+    return fetcher.fetchFile(subArtifact, repositories = repositories)
   }
 
   /**
    * Resolves and downloads the given artifact's pom file and main artifact file.
    *
-   * The result is a [Pair<Path, Path] with the first item being the local path to the pom, and
-   * the second being the local path to the artifact file. This version throws an IOException if
+   * > NOTE: This version is deprecated and will ultimately be deleted. Please use
+   * > [download(String,Boolean)].
+   */
+  @Deprecated(
+    "New method has a more robust download result type",
+    replaceWith = ReplaceWith("download(coordinate, downloadSources = false)"),
+    level = WARNING
+  )
+  @Throws(IOException::class)
+  fun download(coordinate: String): Pair<Path, Path> =
+    download(coordinate, false).let { it.pom to it.main }
+
+  /**
+   * Resolves and downloads the given artifact's pom file and main artifact file.
+   *
+   * The result is a [Triple<Path, Path, Path?>] with the first item being the local path to the
+   * pom, the second being the local path to the artifact file, and the third being the path to
+   * the source jar (if it exists, otherwise null)). This version throws an IOException if
    * the download fails (either for the pom or the artifact), or if the downloaded files fail hash
-   * validation.
+   * validation.  This will NOT fail if the -sources.jar is not successfully downloaded, but will
+   * rather return SUCCESSFUL with a null entry
    */
   @Throws(IOException::class)
-  fun download(coordinate: String): Pair<Path, Path> {
+  fun download(coordinate: String, downloadSources: Boolean = false): SimpleDownloadResult {
     val artifact = artifactFor(coordinate)
     val resolvedArtifact = resolveArtifact(artifact)
         ?: throw IOException("Could not resolve pom file for $coordinate")
     val status = downloadArtifact(resolvedArtifact)
+    val sourcesStatus = if (downloadSources) downloadSources(resolvedArtifact) else null
     if (status is SUCCESSFUL)
-      return resolvedArtifact.pom.localFile to resolvedArtifact.main.localFile
+      return SimpleDownloadResult(
+        resolvedArtifact.pom.localFile,
+        resolvedArtifact.main.localFile,
+        if (sourcesStatus != null && sourcesStatus is SUCCESSFUL)
+          resolvedArtifact.sources.localFile else null
+      )
     else throw IOException("Could not download artifact for $coordinate: $status")
   }
 }

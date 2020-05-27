@@ -32,7 +32,7 @@ open class Artifact
     val groupId: String,
     val artifactId: String,
     val version: String,
-    cacheDir: Path
+    val cacheDir: Path
   ) {
 
   val coordinate = "$groupId:$artifactId:$version"
@@ -43,7 +43,7 @@ open class Artifact
 }
 
 /** Represents an artifact whose metadata has been fully resolved by maven */
-class ResolvedArtifact(
+class ResolvedArtifact internal constructor(
   /** The underlying maven model object. */
   val model: Model,
   /** The cache directory into which this file was fetched (or from which it was read) */
@@ -51,9 +51,15 @@ class ResolvedArtifact(
   /** Whether this artifact metadata was remotely fetched or satisfied from the local cache. */
   val cached: Boolean = false
 ) : Artifact(model.groupId, model.artifactId, model.version, cacheDir) {
+
   val main = ArtifactFile(this, cacheDir)
 
+  val sources = SourcesFile(this, cacheDir)
+
   val suffix = packagingToSuffix.getOrDefault(model.packaging, model.packaging)
+
+  fun subArtifact(classifier: String, suffix: String? = null) =
+    ClassifiedFile(this, classifier, suffix, cacheDir)
 }
 
 /**
@@ -89,8 +95,10 @@ interface FileSpec {
   }
 }
 
-class PomFile
-  internal constructor(override val artifact: Artifact, val cacheDir: Path) : FileSpec {
+class PomFile internal constructor(
+  override val artifact: Artifact,
+  val cacheDir: Path
+) : FileSpec {
   override val coordinate: String get() = artifact.coordinate
 
   override val path: Path by lazy {
@@ -106,7 +114,7 @@ class PomFile
   override val localFile: Path by lazy { cacheDir.resolve(path) }
 }
 
-class ArtifactFile(
+class ArtifactFile internal constructor(
   override val artifact: ResolvedArtifact,
   private val cacheDir: Path
 ) : FileSpec {
@@ -126,6 +134,41 @@ class ArtifactFile(
   override val localFile: Path by lazy { cacheDir.resolve(path) }
 }
 
+class SourcesFile internal constructor (
+  artifact: ResolvedArtifact,
+  cacheDir: Path
+) : ClassifiedFile(
+  artifact = artifact,
+  classifier = "sources",
+  suffix = "jar",
+  cacheDir = cacheDir
+)
+
+open class ClassifiedFile internal constructor(
+  override val artifact: ResolvedArtifact,
+  private val classifier: String,
+  private val suffix: String? = null,
+  private val cacheDir: Path
+) : FileSpec {
+  override val coordinate: String get() = artifact.coordinate
+
+  override val path: Path by lazy {
+    // e.g. com/google/guava/guava/16.0.1/guava-16.0.1.jar
+    val overriddenSuffix = suffix ?: artifact.suffix
+    with(artifact) {
+      cacheDir.fileSystem
+        .getPath(groupId.groupPath)
+        .resolve(artifactId)
+        .resolve(version)
+        .resolve("$artifactId-$version-$classifier.$overriddenSuffix")
+    }
+  }
+
+  override val localFile: Path by lazy { cacheDir.resolve(path) }
+}
+
 val Model.snapshot get() = version.endsWith("-SNAPSHOT")
 
 internal val String.groupPath get() = replace(".", "/")
+
+data class SimpleDownloadResult(var pom: Path, var main: Path, var sources: Path?)

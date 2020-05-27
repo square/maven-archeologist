@@ -19,7 +19,7 @@ import org.apache.maven.model.Repository
 import org.apache.maven.model.RepositoryPolicy
 
 /**
- * Well known repositories here, for convenience, as constants (sealed classes)
+ * Well known repositories here, for convenience, as strongly-typed constants (sealed classes)
  *
  * Usage:
  * ```

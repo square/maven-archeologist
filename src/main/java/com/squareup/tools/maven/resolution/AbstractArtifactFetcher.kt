@@ -27,12 +27,17 @@ import org.apache.maven.model.Repository
  */
 abstract class AbstractArtifactFetcher(protected val cacheDir: Path) : ArtifactFetcher {
   override fun fetchPom(pom: PomFile, repositories: List<Repository>): FetchStatus =
-      fetchFiles(pom, repositories)
+      cachedFileOrFetch(pom, repositories)
 
   override fun fetchArtifact(
     artifactFile: ArtifactFile,
     repositories: List<Repository>
-  ): FetchStatus = fetchFiles(artifactFile, repositories)
+  ): FetchStatus = fetchFile(artifactFile, repositories)
+
+  override fun fetchFile(
+    artifactFile: FileSpec,
+    repositories: List<Repository>
+  ): FetchStatus = cachedFileOrFetch(artifactFile, repositories)
 
   /**
    * The workhorse method which actually fetches a file and writes it to the local cacheDir in the
@@ -46,7 +51,7 @@ abstract class AbstractArtifactFetcher(protected val cacheDir: Path) : ArtifactF
     path: Path
   ): RepositoryFetchStatus
 
-  fun fetchFiles(fileSpec: FileSpec, repositories: List<Repository>): FetchStatus {
+  private fun cachedFileOrFetch(fileSpec: FileSpec, repositories: List<Repository>): FetchStatus {
     if (fileSpec.artifact.snapshot)
       return RepositoryFetchStatus.FETCH_ERROR(
           message = "Snapshot versions not supported (${fileSpec.artifact.coordinate})"
