@@ -7,11 +7,12 @@ wraps the Maven resolver APIs and provides simple HTTP-based resolution. From th
 tools can be constructed, which require obtaining (and locally caching) maven artifacts, resolving
 the "effective project model", validating hashes, etc.
 
-***Latest Release:*** [![Maven Central][maven-badge]][maven-search] [![Travis CI][travis-badge]][travis-badge]
+***Latest Release:*** [![Maven Central][maven-badge]][maven-search] [![build][workflow-ci]][workflow-ci-link]
 
 [maven-badge]: https://maven-badges.herokuapp.com/maven-central/com.squareup.tools.build/maven-archeologist/badge.svg?style=plastic
 [maven-search]: https://search.maven.org/artifact/com.squareup.tools.build/maven-archeologist
-[travis-badge]: https://img.shields.io/travis/square/maven-archeologist?label=master&style=plastic
+[workflow-ci]: https://github.com/square/maven-archeologist/workflows/ci/badge.svg
+[workflow-ci-link]: https://github.com/square/maven-archeologist/actions?query=workflow%3ACI
 
 ## Contents
 
