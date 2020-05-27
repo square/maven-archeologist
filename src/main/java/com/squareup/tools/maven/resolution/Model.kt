@@ -43,7 +43,7 @@ open class Artifact
 }
 
 /** Represents an artifact whose metadata has been fully resolved by maven */
-class ResolvedArtifact constructor(
+class ResolvedArtifact internal constructor(
   /** The underlying maven model object. */
   val model: Model,
   /** The cache directory into which this file was fetched (or from which it was read) */
