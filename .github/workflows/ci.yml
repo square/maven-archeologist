@@ -25,7 +25,7 @@ jobs:
       with:
         path: |
           "/home/runner/.cache/bazel"
-          "home/runner/.m2/repository"
+          "/home/runner/.m2/repository"
         key: caches-${{ runner.os }}
     - name: Install bazelisk
       run: |
@@ -52,7 +52,7 @@ jobs:
       with:
         path: |
           "/home/runner/.cache/bazel"
-          "home/runner/.m2/repository"
+          "/home/runner/.m2/repository"
         key: caches-${{ runner.os }}
     - name: Install bazelisk
       run: |
