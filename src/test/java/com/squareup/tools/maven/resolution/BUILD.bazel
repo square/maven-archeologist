@@ -50,3 +50,16 @@ kt_jvm_test(
         "@maven//junit",
     ],
 )
+
+kt_jvm_test(
+    name = "HttpProxyTest",
+    srcs = ["HttpProxyTest.kt"],
+    friend = ":testlib",
+    test_class = "com.squareup.tools.maven.resolution.HttpProxyTest",
+    deps = [
+        ":testlib",
+        "//src/main/java/com/squareup/tools/maven/resolution",
+        "@maven//com/google/truth",
+        "@maven//junit",
+    ],
+)

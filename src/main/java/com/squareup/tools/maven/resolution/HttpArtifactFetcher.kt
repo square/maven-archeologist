@@ -24,6 +24,7 @@ import java.nio.file.Path
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Request.Builder
+
 import org.apache.maven.model.Repository
 
 /**
@@ -38,10 +39,12 @@ import org.apache.maven.model.Repository
  * This class currently does not support SNAPSHOT artifacts.
  * TODO: Handle snapshots
  */
+
 class HttpArtifactFetcher(
-  cacheDir: Path,
-  private val client: OkHttpClient = OkHttpClient()
+  cacheDir: Path
 ) : AbstractArtifactFetcher(cacheDir) {
+
+  val proxyEnvConfig: ProxyEnvParseResult by lazy { ProxyUtils.getConfig() }
 
   override fun fetchFile(
     fileSpec: FileSpec,
@@ -49,7 +52,22 @@ class HttpArtifactFetcher(
     path: Path
   ) : RepositoryFetchStatus {
     val url = "${repository.url}/$path"
+
+    var builder = OkHttpClient.Builder()
+    if (proxyEnvConfig is ProxyEnvParseResult.ProxyConfig) {
+      val exemptionStatus = ProxyUtils.checkUrlIfProxyExempt(proxyEnvConfig, repository.url)
+
+      if (exemptionStatus is ProxyExemptParseResult.NotExempt) {
+        builder.proxy(exemptionStatus.proxy)
+        ProxyUtils.createAuthenticatorIfNecessary(proxyEnvConfig)?.let {
+          builder.authenticator(it)
+        }
+      }
+    }
+    val client = builder.build()
+
     val request: Request = Builder().url(url).build()
+
     return client.newCall(request)
         .also { info { "About to fetch $url" } }
         .execute()
