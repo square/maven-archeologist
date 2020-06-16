@@ -43,7 +43,7 @@ class HttpArtifactFetcher(
   /** The path to the local artifact cache. */
   cacheDir: Path,
   /** A function to return an [OkHttpClient], possibly configured for proxies, filtered by url */
-  private val client: (url: String) -> OkHttpClient = ProxyHelper::createProxyingClientFromEnv
+  private val client: OkHttpClient = OkHttpClient()
 ) : AbstractArtifactFetcher(cacheDir) {
 
   override fun fetchFile(
@@ -53,7 +53,9 @@ class HttpArtifactFetcher(
   ): RepositoryFetchStatus {
     val url = "${repository.url}/$path"
     val request: Request = Builder().url(url).build()
-    return client(url).newCall(request)
+    val proxiedClient = ProxyHelper.createProxyingClientFromEnv(url, client)
+
+    return proxiedClient.newCall(request)
         .also { info { "About to fetch $url" } }
         .execute()
         .use { response ->

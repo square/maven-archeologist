@@ -55,14 +55,14 @@ object ProxyHelper {
     else -> throw IllegalStateException("Invalid proxy protocol")
   }
 
-  fun createProxyingClientFromEnv(url: String): OkHttpClient {
-    val builder = OkHttpClient.Builder()
+  fun createProxyingClientFromEnv(url: String, client: OkHttpClient): OkHttpClient {
     val exemptResult = config.isExempt(url, getenv("no_proxy") ?: getenv("NO_PROXY"))
     if (exemptResult is NotExempt) {
+      val builder = client.newBuilder()
       builder.proxy(exemptResult.proxy)
       config.authenticator()?.let { builder.authenticator(it) }
     }
-    return builder.build()
+    return client
   }
 }
 
