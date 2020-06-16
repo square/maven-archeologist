@@ -227,7 +227,7 @@ wish to use will run with the url of the proxy service (including, optionally, a
 username/password). e.g.:
 
 ```sh
-setenv HTTP_PROXY=localhost:8080
+export HTTP_PROXY=localhost:8080
 artifact_resolver_cli some:artifact:1.0
 ```
 
@@ -239,8 +239,8 @@ proxy (for security or performance reasons), setting a list of url matching infi
 the environment variable `NO_PROXY` will allow maven-archeologist to route prefix-matching 
 
 ```sh
-setenv HTTP_PROXY=localhost:8080
-setenv NO_PROXY=.repo.corp,.repo2.corp
+export HTTP_PROXY=localhost:8080
+export NO_PROXY=.repo.corp,.repo2.corp
 artifact_resolver_cli some:artifact:1.0
 ```
 
