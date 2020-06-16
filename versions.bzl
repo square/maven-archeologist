@@ -14,7 +14,7 @@
 # library version - change in release branches. This should always be "HEAD-SNAPSHOT" at master HEAD
 load("//tools/release:release_metadata.bzl", "developer", "metadata")
 
-LIBRARY_VERSION = "HEAD-SNAPSHOT"  # Don't refactor this without altering tools/deploy.kts
+LIBRARY_VERSION = "0.0.5"  # Don't refactor this without altering tools/deploy.kts
 LIBRARY_METADATA = metadata(
     name = "Maven Archeologist",
     description = "A thin API for resolving and downloading Maven artifacts and metadata",
