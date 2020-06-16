@@ -63,8 +63,8 @@ class Main : CliktCommand() {
       exitProcess(1)
     }
     val repo = if (travis) {
-      if (branch == "master") Repo.SonatypeSnapshots
-      else throw PrintMessage("Aborting deployment on a non-master branch.")
+      if (branch == "main") Repo.SonatypeSnapshots
+      else throw PrintMessage("Aborting deployment on a non-main branch.")
     } else if (branch.startsWith("release-")) {
       if (key == null) {
         throw UsageError("Must supply --key <gpgkey> for release deployments.")

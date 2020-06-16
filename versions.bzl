@@ -11,7 +11,7 @@
 # the License.
 
 # Main library metadata:
-# library version - change in release branches. This should always be "HEAD-SNAPSHOT" at master HEAD
+# library version - change in release branches. This should always be "HEAD-SNAPSHOT" at main HEAD
 load("//tools/release:release_metadata.bzl", "developer", "metadata")
 
 LIBRARY_VERSION = "HEAD-SNAPSHOT"  # Don't refactor this without altering tools/deploy.kts
@@ -21,7 +21,7 @@ LIBRARY_METADATA = metadata(
     group_id = "com.squareup.tools.build",
     artifact_id = "maven-archeologist",
     # library version - change in release branches.
-    # This should always be "HEAD-SNAPSHOT" at master HEAD
+    # This should always be "HEAD-SNAPSHOT" at main HEAD
     version = LIBRARY_VERSION,
     target = "//src/main/java/com/squareup/tools/maven/resolution",
     license = "Apache-2.0",  # SPDX token for Apache 2.0
