@@ -21,6 +21,7 @@ private val URL_PATTERN =
   Pattern.compile("^(https?)://(([^:@]+?)(?::([^@]+?))?@)?([^:]+)(?::(\\d+))?/?$")
 
 object ProxyHelper {
+  private val rootClient: OkHttpClient = OkHttpClient()
   private val config: ProxyConfig = createConfig(getenv("https_proxy") ?: getenv("HTTPS_PROXY"))
 
   internal fun createConfig(proxyAddress: String?): ProxyConfig {
@@ -56,13 +57,14 @@ object ProxyHelper {
   }
 
   fun createProxyingClientFromEnv(url: String): OkHttpClient {
-    val builder = OkHttpClient.Builder()
     val exemptResult = config.isExempt(url, getenv("no_proxy") ?: getenv("NO_PROXY"))
     if (exemptResult is NotExempt) {
+      val builder = rootClient.newBuilder()
       builder.proxy(exemptResult.proxy)
       config.authenticator()?.let { builder.authenticator(it) }
+      return builder.build()
     }
-    return builder.build()
+    return rootClient
   }
 }
 
