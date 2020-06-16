@@ -13,9 +13,11 @@ import java.util.regex.Pattern
 import okhttp3.Authenticator
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
+import okhttp3.OkHttpClient.Builder
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
+import kotlin.reflect.KFunction0
 
 private val URL_PATTERN =
   Pattern.compile("^(https?)://(([^:@]+?)(?::([^@]+?))?@)?([^:]+)(?::(\\d+))?/?$")
@@ -55,14 +57,15 @@ object ProxyHelper {
     else -> throw IllegalStateException("Invalid proxy protocol")
   }
 
-  fun createProxyingClientFromEnv(url: String): OkHttpClient {
-    val builder = OkHttpClient.Builder()
+  fun createProxyingClientFromEnv(url: String, clientBuilder: KFunction0<Builder>): OkHttpClient? {
     val exemptResult = config.isExempt(url, getenv("no_proxy") ?: getenv("NO_PROXY"))
     if (exemptResult is NotExempt) {
+      val builder = clientBuilder()
       builder.proxy(exemptResult.proxy)
       config.authenticator()?.let { builder.authenticator(it) }
+      builder.build()
     }
-    return builder.build()
+    return null
   }
 }
 
