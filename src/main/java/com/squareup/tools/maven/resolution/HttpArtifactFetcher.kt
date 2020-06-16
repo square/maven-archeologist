@@ -24,7 +24,6 @@ import java.nio.file.Path
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Request.Builder
-
 import org.apache.maven.model.Repository
 
 /**
@@ -41,34 +40,20 @@ import org.apache.maven.model.Repository
  */
 
 class HttpArtifactFetcher(
-  cacheDir: Path
+  /** The path to the local artifact cache. */
+  cacheDir: Path,
+  /** A function to return an [OkHttpClient], possibly configured for proxies, filtered by url */
+  private val client: (url: String) -> OkHttpClient = ProxyHelper::createProxyingClientFromEnv
 ) : AbstractArtifactFetcher(cacheDir) {
-
-  val proxyEnvConfig: ProxyEnvParseResult by lazy { ProxyUtils.getConfig() }
 
   override fun fetchFile(
     fileSpec: FileSpec,
     repository: Repository,
     path: Path
-  ) : RepositoryFetchStatus {
+  ): RepositoryFetchStatus {
     val url = "${repository.url}/$path"
-
-    var builder = OkHttpClient.Builder()
-    if (proxyEnvConfig is ProxyEnvParseResult.ProxyConfig) {
-      val exemptionStatus = ProxyUtils.checkUrlIfProxyExempt(proxyEnvConfig, repository.url)
-
-      if (exemptionStatus is ProxyExemptParseResult.NotExempt) {
-        builder.proxy(exemptionStatus.proxy)
-        ProxyUtils.createAuthenticatorIfNecessary(proxyEnvConfig)?.let {
-          builder.authenticator(it)
-        }
-      }
-    }
-    val client = builder.build()
-
     val request: Request = Builder().url(url).build()
-
-    return client.newCall(request)
+    return client(url).newCall(request)
         .also { info { "About to fetch $url" } }
         .execute()
         .use { response ->
@@ -77,7 +62,7 @@ class HttpArtifactFetcher(
             200 -> {
               response.body?.bytes()?.let { body ->
                 try {
-                  var localFile = cacheDir.resolve(path)
+                  val localFile = cacheDir.resolve(path)
                   safeWrite(localFile, body)
                   if (fileSpec.localFile.exists) SUCCESSFUL.SUCCESSFULLY_FETCHED
                   else FETCH_ERROR(
