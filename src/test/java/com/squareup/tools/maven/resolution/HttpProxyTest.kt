@@ -1,67 +1,59 @@
 package com.squareup.tools.maven.resolution
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.tools.maven.resolution.ProxyEnvParseResult.ProxyConfig
-import okhttp3.Authenticator
+import com.squareup.tools.maven.resolution.ProxyConfig.ConfiguredProxy
 import org.junit.Test
 
 class HttpProxyTest {
   @Test fun testHttpProxyParsing() {
-    val result = ProxyUtils.getConfigFromEnvironment("http://www.myproxy.com")
-    assertThat(result).isInstanceOf(ProxyConfig::class.java)
-    val proxyConfig = result as ProxyConfig
-
-    assertThat(proxyConfig.hostname).isEqualTo("www.myproxy.com")
-    assertThat(proxyConfig.port).isEqualTo(80)
+    val config = ProxyHelper.createConfig("http://www.myproxy.com")
+    require(config is ConfiguredProxy) { "Should be a Configured Proxy" }
+    assertThat(config.hostname).isEqualTo("www.myproxy.com")
+    assertThat(config.port).isEqualTo(80)
   }
 
   @Test fun testHttpsProxyParsing() {
-    val result = ProxyUtils.getConfigFromEnvironment("https://www.myproxy.com")
-    assertThat(result).isInstanceOf(ProxyConfig::class.java)
-    val proxyConfig = result as ProxyConfig
-
-    assertThat(proxyConfig.hostname).isEqualTo("www.myproxy.com")
-    assertThat(proxyConfig.port).isEqualTo(443)
+    val config = ProxyHelper.createConfig("https://www.myproxy.com")
+    require(config is ConfiguredProxy) { "Should be a Configured Proxy" }
+    assertThat(config.hostname).isEqualTo("www.myproxy.com")
+    assertThat(config.port).isEqualTo(443)
   }
 
   @Test fun testProxyParsingError() {
-    val result = ProxyUtils.getConfigFromEnvironment("http:/www.myproxy.com")
-    assertThat(result).isInstanceOf(ProxyEnvParseResult.Error::class.java)
+    val config = ProxyHelper.createConfig("http:/www.myproxy.com")
+    assertThat(config).isInstanceOf(ProxyConfig.Error::class.java)
   }
 
   @Test fun testProxyUserNamePassword() {
-    val result = ProxyUtils.getConfigFromEnvironment("https://userid:password@www.myproxy.com")
-    assertThat(result).isInstanceOf(ProxyEnvParseResult.ProxyConfig::class.java)
+    val config = ProxyHelper.createConfig("https://userid:password@www.myproxy.com")
+    assertThat(config).isInstanceOf(ConfiguredProxy::class.java)
 
-    require(result is ProxyConfig) { "Incorrect proxy config type ${result.javaClass}" }
-    assertThat(result.hostname).isEqualTo("www.myproxy.com")
-    assertThat(result.port).isEqualTo(443)
-    assertThat(result.username).isEqualTo("userid")
-    assertThat(result.password).isEqualTo("password")
+    require(config is ConfiguredProxy) { "Incorrect proxy config type ${config.javaClass}" }
+    assertThat(config.hostname).isEqualTo("www.myproxy.com")
+    assertThat(config.port).isEqualTo(443)
+    assertThat(config.username).isEqualTo("userid")
+    assertThat(config.password).isEqualTo("password")
   }
 
   @Test fun testProxyExempt() {
-    val proxyConfig = ProxyUtils.getConfigFromEnvironment("http://www.myproxy.com")
-    val result = proxyConfig.isExempt("http://www.cnn.com", ".cnn.com")
-    assertThat(result).isInstanceOf(ProxyExemptParseResult.Exempt::class.java)
+    val config = ProxyHelper.createConfig("https://www.myproxy.com")
+    val status = config.isExempt("http://www.cnn.com", ".cnn.com")
+    assertThat(status).isInstanceOf(ExemptionStatus.Exempt::class.java)
   }
 
   @Test fun testProxyNotExempt() {
-    val proxyConfig = ProxyUtils.getConfigFromEnvironment("http://www.myproxy.com")
-    val result = proxyConfig.isExempt("http://www.cnn.com", ".abcnews.com")
-    assertThat(result).isInstanceOf(ProxyExemptParseResult.NotExempt::class.java)
+    val config = ProxyHelper.createConfig("https://www.myproxy.com")
+    val status = config.isExempt("http://www.cnn.com", ".abcnews.com")
+    assertThat(status).isInstanceOf(ExemptionStatus.NotExempt::class.java)
   }
 
   @Test fun testAuthenticator() {
-    val proxyConfig = ProxyUtils.getConfigFromEnvironment("https://userid:password@www.myproxy.com")
-    val result = ProxyUtils.createAuthenticatorIfNecessary(proxyConfig)
-    assertThat(result).isNotNull()
-    assertThat(result).isInstanceOf(Authenticator::class.java)
+    val config = ProxyHelper.createConfig("https://userid:password@www.myproxy.com")
+    assertThat(config.authenticator()).isNotNull()
   }
 
   @Test fun testNoAuthenticator() {
-    val proxyConfig = ProxyUtils.getConfigFromEnvironment("https://www.myproxy.com")
-    val result = ProxyUtils.createAuthenticatorIfNecessary(proxyConfig)
-    assertThat(result).isNull()
+    val config = ProxyHelper.createConfig("https://www.myproxy.com")
+    assertThat(config.authenticator()).isNull()
   }
 }
