@@ -1,4 +1,4 @@
-# Release Instructions.
+# Release Instructions
 
 > Note: Versions should be semantic versioning maj.min.patch style, except for the default
 > HEAD-SNAPSHOT which is the version used on the `main` branch
@@ -40,7 +40,7 @@ Steps:
       3. Wait for the deployment to push all the files to sonatype. 
       4. Log in to `oss.sonatype.org`
       5. Search for "staging repositories"
-      6. Find a "comsquareup-<somenumber>" repo.
+      6. Find a `comsquareup-<somenumber>` repo.
           - If more than one, select the one exists, select each and in the bottom frame, select the
             `content` tab, and open the file system tree to make sure it's the project you want to
             deploy.
