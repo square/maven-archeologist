@@ -17,9 +17,12 @@
 package com.squareup.tools.maven.resolution
 
 import com.google.common.truth.Truth.assertThat
+import com.squareup.tools.maven.resolution.FetchStatus.ERROR
+import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.FETCH_ERROR
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.NOT_FOUND
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.SUCCESSFUL
 import java.io.IOException
+import java.net.ConnectException
 import java.nio.file.Files
 import org.apache.maven.model.Repository
 import org.apache.maven.model.RepositoryPolicy
@@ -83,7 +86,7 @@ class ResolutionTest {
     check(!cacheDir.exists) { "Failed to tear down and delete temp directory." }
   }
 
-  @Test fun testBasicResolution() {
+  @Test fun testLegacyResolution() {
     val artifact = resolver.artifactFor("foo.bar:bar:1")
     val resolved = resolver.resolveArtifact(artifact)
     assertThat(resolved).isNotNull()
@@ -93,10 +96,49 @@ class ResolutionTest {
     assertThat(resolved.pom.localFile.readText()).contains("<version>1</version>")
   }
 
+  @Test fun testBasicResolution() {
+    val artifact = resolver.artifactFor("foo.bar:bar:1")
+    val result = resolver.resolve(artifact)
+    assertThat(result.status).isInstanceOf(SUCCESSFUL::class.java)
+    val resolved = result.artifact
+    assertThat(resolved).isNotNull()
+    assertThat(resolved!!.pom.localFile.exists).isTrue()
+    assertThat(resolved.pom.localFile.readText()).contains("<groupId>foo.bar</groupId>")
+    assertThat(resolved.pom.localFile.readText()).contains("<artifactId>bar</artifactId>")
+    assertThat(resolved.pom.localFile.readText()).contains("<version>1</version>")
+  }
+
   @Test fun testBasicResolutionFail() {
     val artifact = resolver.artifactFor("foo.bar:boq:1")
-    val resolved = resolver.resolveArtifact(artifact)
-    assertThat(resolved).isNull()
+    val result = resolver.resolve(artifact)
+    assertThat(result.status).isInstanceOf(NOT_FOUND::class.java)
+    assert(result.status is NOT_FOUND) { "Expected a $NOT_FOUND result: ${result.status}" }
+    assertThat(result.artifact).isNull()
+  }
+
+  @Test fun testConnectionErrorsFail() {
+    val badResolver = ArtifactResolver(
+      cacheDir = cacheDir,
+      fetcher = HttpArtifactFetcher(cacheDir),
+      repositories = listOf(Repository().apply {
+        id = repoId
+        releases = RepositoryPolicy().apply { enabled = "true" }
+        url = "https://localhost:443" // can't http connect to an ssh port.
+      })
+    )
+    val artifact = badResolver.artifactFor("foo.bar:boq:1")
+    val result = badResolver.resolve(artifact)
+    assertThat(result.status).isInstanceOf(ERROR::class.java)
+    assertThat(result.artifact).isNull()
+    val error = result.status as ERROR
+    assertThat(error.errors).hasSize(1)
+    val (id, status) = error.errors.entries.first()
+    assertThat(status).isInstanceOf(FETCH_ERROR::class.java)
+    val fetchError = status as FETCH_ERROR
+    val innerError = checkNotNull(fetchError.error)
+    assertThat(innerError).isInstanceOf(ConnectException::class.java)
+    assertThat(innerError.message).contains("Failed to connect to localhost")
+    assertThat(innerError.message).contains(":443")
   }
 
   @Test fun testArtifactDownload() {
@@ -192,5 +234,4 @@ class ResolutionTest {
     assertThat(file.toString()).isEqualTo("$cacheDir/foo/bar/baz/2/baz-2.txt")
     assertThat(file.exists).isTrue()
   }
-
 }

@@ -20,17 +20,18 @@ import com.squareup.tools.maven.resolution.FetchStatus.INVALID_HASH
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.FETCH_ERROR
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.NOT_FOUND
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.SUCCESSFUL
+import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.SUCCESSFUL.FOUND_IN_CACHE
 import java.io.IOException
 import java.lang.IllegalArgumentException
 import java.nio.file.FileSystems
 import java.nio.file.Path
+import kotlin.DeprecationLevel.WARNING
 import org.apache.maven.model.Repository
 import org.apache.maven.model.building.DefaultModelBuilderFactory
 import org.apache.maven.model.building.DefaultModelBuildingRequest
 import org.apache.maven.model.building.ModelBuildingRequest
 import org.apache.maven.model.building.ModelBuildingResult
 import org.apache.maven.model.resolution.ModelResolver
-import kotlin.DeprecationLevel.WARNING
 
 /**
  * The main entry point to the library, which wraps (and mostly hides) the maven resolution
@@ -81,6 +82,7 @@ import kotlin.DeprecationLevel.WARNING
  */
 class ArtifactResolver(
   suppressAddRepositoryWarnings: Boolean = false,
+  private val strictHashValidation: Boolean = false,
   private val cacheDir: Path =
       FileSystems.getDefault().getPath("${System.getProperty("user.home")}/.m2/repository"),
   private val fetcher: ArtifactFetcher = HttpArtifactFetcher(cacheDir = cacheDir),
@@ -94,6 +96,7 @@ class ArtifactResolver(
   )
 ) {
 
+  /** Returns an [Artifact] parsed from a given maven style specification (group:id:version) */
   fun artifactFor(spec: String): Artifact {
     with(spec.split(":")) {
       when (this.size) {
@@ -114,32 +117,61 @@ class ArtifactResolver(
     }
   }
 
+  /**
+   * Resolves the supplied artifact, downloading any necessary POM files needed to resolve
+   * the model, returning a [ResolvedArtifact] if the model was successfully resolved.
+   * This is an older API, and it logs errors/warnings when resolution fails, rather than returning
+   * a status, and letting the calling code decide whether to log or handle.
+   */
+  @Deprecated(
+    "Older method which does not include a FetchStatus.",
+    replaceWith = ReplaceWith("resolve(artifact)")
+  )
   fun resolveArtifact(artifact: Artifact): ResolvedArtifact? {
-    if (artifact is ResolvedArtifact) return artifact
-
-    info { "Fetching ${artifact.coordinate}" }
-    val fetched = fetcher.fetchPom(artifact.pom, repositories = repositories)
-    when (fetched) {
-      is SUCCESSFUL -> { /* carry on */ }
-      is INVALID_HASH -> {
-        // WARN spam, but continue
+    val result = resolve(artifact)
+    when (result.status) {
+      is INVALID_HASH -> result.artifact.also {
         warn { "Hashes did not match for artifact ${artifact.coordinate}" }
       }
       is FETCH_ERROR -> {
         val repositoryIds = repositories.map { repo -> repo.id }
         error { "Could not resolve artifact pom for ${artifact.coordinate}: $repositoryIds" }
-        return null
       }
       is ERROR -> {
         error { "Errors from repositories while resolving ${artifact.coordinate}." }
-        fetched.errors.entries.forEach { (id, error) -> error { "    $id: $error" } }
-        return null
+        result.status.errors.entries.forEach { (id, error) ->
+          error { "    $id: $error" }
+        }
       }
       is NOT_FOUND -> {
         val repositoryIds = repositories.map { repo -> repo.id }
         error { "No artifact found ${artifact.coordinate} in repositories $repositoryIds" }
-        return null
       }
+    }
+    return result.artifact
+  }
+
+  /**
+   * Resolves the supplied artifact, downloading any necessary POM files needed to resolve
+   * the model, returning a [ResolutionResult] that contains the fetch status (success from cache
+   * or download or relevant errors) and a [ResolvedArtifact] if the model was successfully
+   * resolved.
+   *
+   * If the returned result includes a non-null resolved artifact, the fetch status will be
+   * either [FOUND_IN_CACHE] or [SUCCESSFUL.SUCCESSFULLY_FETCHED] or possibly an [INVALID_HASH]
+   * (if strict hash validation is disabled, as is the default)
+   */
+  fun resolve(artifact: Artifact): ResolutionResult {
+    if (artifact is ResolvedArtifact) return ResolutionResult(FOUND_IN_CACHE, artifact)
+
+    info { "Fetching ${artifact.coordinate}" }
+    val fetched = fetcher.fetchPom(artifact.pom, repositories = repositories)
+    when (fetched) {
+      is ERROR -> return ResolutionResult(fetched, null)
+      is FETCH_ERROR -> return ResolutionResult(fetched, null)
+      is NOT_FOUND -> return ResolutionResult(fetched, null)
+      is INVALID_HASH -> if (strictHashValidation) return ResolutionResult(fetched, null)
+      is SUCCESSFUL -> { /* continue */ }
     }
     val modelBuilder = modelBuilderFactory.newInstance()
     val req = DefaultModelBuildingRequest()
@@ -151,7 +183,10 @@ class ArtifactResolver(
           systemProperties = System.getProperties()
         }
     val builder: ModelBuildingResult = modelBuilder.build(req)
-    return ResolvedArtifact(builder.effectiveModel, cacheDir, fetched is SUCCESSFUL.FOUND_IN_CACHE)
+    return ResolutionResult(
+      status = fetched,
+      artifact = ResolvedArtifact(builder.effectiveModel, cacheDir, fetched is FOUND_IN_CACHE)
+    )
   }
 
   /**
@@ -231,3 +266,12 @@ class ArtifactResolver(
     else throw IOException("Could not download artifact for $coordinate: $status")
   }
 }
+
+/**
+ * Represents the result of a resolution request, containing a fetch status for the model
+ * object files (poms) and (if successfully resolved) the resolved model artifact.
+ */
+data class ResolutionResult(
+  val status: FetchStatus,
+  val artifact: ResolvedArtifact?
+)

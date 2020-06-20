@@ -53,32 +53,34 @@ class HttpArtifactFetcher(
   ): RepositoryFetchStatus {
     val url = "${repository.url}/$path"
     val request: Request = Builder().url(url).build()
-    return client(url).newCall(request)
+    return try {
+      client(url).newCall(request)
         .also { info { "About to fetch $url" } }
         .execute()
         .use { response ->
           info { "Fetched $url with response code ${response.code}" }
           when (response.code) {
             200 -> {
-              response.body?.bytes()?.let { body ->
-                try {
-                  val localFile = cacheDir.resolve(path)
-                  safeWrite(localFile, body)
-                  if (fileSpec.localFile.exists) SUCCESSFUL.SUCCESSFULLY_FETCHED
-                  else FETCH_ERROR(
+              response.body?.bytes()
+                ?.let { body ->
+                  try {
+                    val localFile = cacheDir.resolve(path)
+                    safeWrite(localFile, body)
+                    if (fileSpec.localFile.exists) SUCCESSFUL.SUCCESSFULLY_FETCHED
+                    else FETCH_ERROR(
                       repository = repository.id,
                       message = "File downloaded but did not write successfully."
-                  )
-                } catch (e: IOException) {
-                  FETCH_ERROR(
+                    )
+                  } catch (e: IOException) {
+                    FETCH_ERROR(
                       repository = repository.id,
                       message = "Failed to write file",
                       error = e
-                  )
-                }
-              } ?: FETCH_ERROR(
-                  repository = repository.id,
-                  message = "$path was resolved from ${repository.url} with no body"
+                    )
+                  }
+                } ?: FETCH_ERROR(
+                repository = repository.id,
+                message = "$path was resolved from ${repository.url} with no body"
               )
             }
             404 -> NOT_FOUND
@@ -86,12 +88,20 @@ class HttpArtifactFetcher(
               warn { "Error fetching ${fileSpec.artifact.coordinate} (${response.code}): " }
               debug { "Error content: ${response.body}" }
               FETCH_ERROR(
-                  repository = repository.id,
-                  message = "Unknown error fetching ${fileSpec.artifact.coordinate}",
-                  responseCode = response.code
+                repository = repository.id,
+                message = "Unknown error fetching ${fileSpec.artifact.coordinate}",
+                responseCode = response.code
               )
             }
           }
         }
+    } catch (e: IOException) {
+      FETCH_ERROR(
+        error = e,
+        repository = repository.id,
+        message = "Connection error fetching ${fileSpec.artifact.coordinate}: ${e.message}",
+        responseCode = -1
+      )
+    }
   }
 }
