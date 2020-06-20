@@ -18,6 +18,7 @@ package com.squareup.tools.maven.resolution
 
 import com.google.common.truth.Truth.assertThat
 import com.squareup.tools.maven.resolution.FetchStatus.ERROR
+import com.squareup.tools.maven.resolution.FetchStatus.INVALID_HASH
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.FETCH_ERROR
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.NOT_FOUND
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.SUCCESSFUL
@@ -39,7 +40,7 @@ class ResolutionTest {
     releases = RepositoryPolicy().apply { enabled = "true" }
     url = repoUrl
   })
-  private val fetcher = FakeFetcher(
+  private val fakeFetcher = FakeFetcher(
       cacheDir = cacheDir,
       repositoriesContent = mapOf(repoId to mutableMapOf<String, String>()
           .fakeArtifact(
@@ -74,10 +75,32 @@ class ResolutionTest {
         )
       )
   )
+  private val invalidHashFetcher = FakeFetcher(
+    cacheDir = cacheDir,
+    repositoriesContent = mapOf(repoId to mutableMapOf<String, String>()
+      .fakeArtifact(
+        repoUrl = "fake://repo",
+        coordinate = "foo.bar:bar:1",
+        suffix = "txt",
+        pomContent = """<?xml version="1.0" encoding="UTF-8"?>
+                  <project><modelVersion>4.0.0</modelVersion>
+                    <groupId>foo.bar</groupId>
+                    <artifactId>bar</artifactId>
+                    <version>1</version>
+                    <packaging>txt</packaging> 
+                  </project>
+                  """.trimIndent(),
+        fileContent = "bar\n",
+        sourceContent = "sources",
+        realHash = false,
+        classifiedFiles = mapOf("extra" to ("extrastuff" to "bargle"))
+      )
+    )
+  )
 
   private val resolver = ArtifactResolver(
     cacheDir = cacheDir,
-    fetcher = fetcher,
+    fetcher = fakeFetcher,
     repositories = repositories
   )
 
@@ -139,6 +162,31 @@ class ResolutionTest {
     assertThat(innerError).isInstanceOf(ConnectException::class.java)
     assertThat(innerError.message).contains("Failed to connect to localhost")
     assertThat(innerError.message).contains(":443")
+  }
+
+  @Test fun testStrictInvalidHashesFail() {
+    val fakeResolver = ArtifactResolver(
+      cacheDir = cacheDir,
+      strictHashValidation = true,
+      fetcher = invalidHashFetcher,
+      repositories = repositories
+    )
+    val artifact = fakeResolver.artifactFor("foo.bar:bar:1")
+    val result = fakeResolver.resolve(artifact)
+    assertThat(result.status).isInstanceOf(INVALID_HASH::class.java)
+    assertThat(result.artifact).isNull()
+  }
+
+  @Test fun testLenientInvalidHashesFail() {
+    val fakeResolver = ArtifactResolver(
+      cacheDir = cacheDir,
+      fetcher = invalidHashFetcher,
+      repositories = repositories
+    )
+    val artifact = fakeResolver.artifactFor("foo.bar:bar:1")
+    val result = fakeResolver.resolve(artifact)
+    assertThat(result.status).isInstanceOf(INVALID_HASH::class.java)
+    assertThat(result.artifact).isNotNull()
   }
 
   @Test fun testArtifactDownload() {
@@ -212,19 +260,19 @@ class ResolutionTest {
   }
 
   @Test fun testFetchAvoidance() {
-    assertThat(fetcher.count).isEqualTo(0)
+    assertThat(fakeFetcher.count).isEqualTo(0)
     resolver.download("foo.bar:bar:1", true)
-    assertThat(fetcher.count).isEqualTo(9)
+    assertThat(fakeFetcher.count).isEqualTo(9)
     resolver.download("foo.bar:bar:1", true)
-    assertThat(fetcher.count).isEqualTo(9)
+    assertThat(fakeFetcher.count).isEqualTo(9)
   }
 
   @Test fun testFetchAvoidanceNoSources() {
-    assertThat(fetcher.count).isEqualTo(0)
+    assertThat(fakeFetcher.count).isEqualTo(0)
     resolver.download("foo.bar:bar:1", false)
-    assertThat(fetcher.count).isEqualTo(6)
+    assertThat(fakeFetcher.count).isEqualTo(6)
     resolver.download("foo.bar:bar:1", true)
-    assertThat(fetcher.count).isEqualTo(9)
+    assertThat(fakeFetcher.count).isEqualTo(9)
   }
 
   @Test fun testLegacySimpleDownloadNoSources() {
