@@ -121,9 +121,8 @@ class ResolutionTest {
 
   @Test fun testBasicResolution() {
     val artifact = resolver.artifactFor("foo.bar:bar:1")
-    val result = resolver.resolve(artifact)
-    assertThat(result.status).isInstanceOf(SUCCESSFUL::class.java)
-    val resolved = result.artifact
+    val (status, resolved) = resolver.resolve(artifact)
+    assertThat(status).isInstanceOf(SUCCESSFUL::class.java)
     assertThat(resolved).isNotNull()
     assertThat(resolved!!.pom.localFile.exists).isTrue()
     assertThat(resolved.pom.localFile.readText()).contains("<groupId>foo.bar</groupId>")
@@ -133,10 +132,9 @@ class ResolutionTest {
 
   @Test fun testBasicResolutionFail() {
     val artifact = resolver.artifactFor("foo.bar:boq:1")
-    val result = resolver.resolve(artifact)
-    assertThat(result.status).isInstanceOf(NOT_FOUND::class.java)
-    assert(result.status is NOT_FOUND) { "Expected a $NOT_FOUND result: ${result.status}" }
-    assertThat(result.artifact).isNull()
+    val (status, resolved) = resolver.resolve(artifact)
+    assertThat(status).isInstanceOf(NOT_FOUND::class.java)
+    assertThat(resolved).isNull()
   }
 
   @Test fun testConnectionErrorsFail() {
@@ -150,15 +148,15 @@ class ResolutionTest {
       })
     )
     val artifact = badResolver.artifactFor("foo.bar:boq:1")
-    val result = badResolver.resolve(artifact)
-    assertThat(result.status).isInstanceOf(ERROR::class.java)
-    assertThat(result.artifact).isNull()
-    val error = result.status as ERROR
-    assertThat(error.errors).hasSize(1)
-    val (id, status) = error.errors.entries.first()
-    assertThat(status).isInstanceOf(FETCH_ERROR::class.java)
-    val fetchError = status as FETCH_ERROR
-    val innerError = checkNotNull(fetchError.error)
+    val (status, resolved) = badResolver.resolve(artifact)
+    assertThat(status).isInstanceOf(ERROR::class.java)
+    assertThat(resolved).isNull()
+    status as ERROR
+    assertThat(status.errors).hasSize(1)
+    val (_, fetchStatus) = status.errors.entries.first()
+    assertThat(fetchStatus).isInstanceOf(FETCH_ERROR::class.java)
+    fetchStatus as FETCH_ERROR
+    val innerError = checkNotNull(fetchStatus.error)
     assertThat(innerError).isInstanceOf(ConnectException::class.java)
     assertThat(innerError.message).contains("Failed to connect to localhost")
     assertThat(innerError.message).contains(":443")
@@ -172,9 +170,9 @@ class ResolutionTest {
       repositories = repositories
     )
     val artifact = fakeResolver.artifactFor("foo.bar:bar:1")
-    val result = fakeResolver.resolve(artifact)
-    assertThat(result.status).isInstanceOf(INVALID_HASH::class.java)
-    assertThat(result.artifact).isNull()
+    val (status, resolved) = fakeResolver.resolve(artifact)
+    assertThat(status).isInstanceOf(INVALID_HASH::class.java)
+    assertThat(resolved).isNull()
   }
 
   @Test fun testLenientInvalidHashesFail() {
@@ -184,9 +182,9 @@ class ResolutionTest {
       repositories = repositories
     )
     val artifact = fakeResolver.artifactFor("foo.bar:bar:1")
-    val result = fakeResolver.resolve(artifact)
-    assertThat(result.status).isInstanceOf(INVALID_HASH::class.java)
-    assertThat(result.artifact).isNotNull()
+    val (status, resolved) = fakeResolver.resolve(artifact)
+    assertThat(status).isInstanceOf(INVALID_HASH::class.java)
+    assertThat(resolved).isNotNull()
   }
 
   @Test fun testArtifactDownload() {
