@@ -57,6 +57,7 @@ internal fun MutableMap<String, String>.fakeArtifact(
   pomContent: String,
   fileContent: String,
   sourceContent: String? = null,
+  realHash: Boolean = true,
   classifiedFiles: Map<String, Pair<String, String>> = mapOf() // classifier=(content=suffix)
 ): MutableMap<String, String> {
   val (groupId, artifactId, version) = coordinate.split(':')
@@ -64,21 +65,21 @@ internal fun MutableMap<String, String>.fakeArtifact(
   val dir = "$repoUrl/$groupPath/$artifactId/$version"
   val filePrefix = "$artifactId-$version"
   put("$dir/$filePrefix.pom", pomContent)
-  put("$dir/$filePrefix.pom.sha1", pomContent.sha1())
-  put("$dir/$filePrefix.pom.md5", pomContent.md5())
+  put("$dir/$filePrefix.pom.sha1", if (realHash) pomContent.sha1() else "badhash")
+  put("$dir/$filePrefix.pom.md5", if (realHash) pomContent.md5() else "badhash")
   put("$dir/$filePrefix.$suffix", fileContent)
-  put("$dir/$filePrefix.$suffix.sha1", fileContent.sha1())
-  put("$dir/$filePrefix.$suffix.md5", fileContent.md5())
+  put("$dir/$filePrefix.$suffix.sha1", if (realHash) fileContent.sha1() else "badhash")
+  put("$dir/$filePrefix.$suffix.md5", if (realHash) fileContent.md5() else "badhash")
   if (sourceContent != null) {
     put("$dir/$filePrefix-sources.jar", sourceContent)
-    put("$dir/$filePrefix-sources.jar.sha1", sourceContent.sha1())
-    put("$dir/$filePrefix-sources.jar.md5", sourceContent.md5())
+    put("$dir/$filePrefix-sources.jar.sha1", if (realHash) sourceContent.sha1() else "badhash")
+    put("$dir/$filePrefix-sources.jar.md5", if (realHash) sourceContent.md5() else "badhash")
   }
   for ((classifier, value) in classifiedFiles) {
     val (content, suffix) = value // can't nest destructuring
     put("$dir/$filePrefix-$classifier.$suffix", content)
-    put("$dir/$filePrefix-$classifier.$suffix.sha1", content.sha1())
-    put("$dir/$filePrefix-$classifier.$suffix.md5", content.md5())
+    put("$dir/$filePrefix-$classifier.$suffix.sha1", if (realHash) content.sha1() else "badhash")
+    put("$dir/$filePrefix-$classifier.$suffix.md5", if (realHash) content.md5() else "badhash")
   }
   return this
 }
