@@ -26,11 +26,14 @@ import java.lang.IllegalArgumentException
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import kotlin.DeprecationLevel.WARNING
+import org.apache.maven.model.Model
 import org.apache.maven.model.Repository
 import org.apache.maven.model.building.DefaultModelBuilderFactory
 import org.apache.maven.model.building.DefaultModelBuildingRequest
+import org.apache.maven.model.building.DefaultModelProcessor
 import org.apache.maven.model.building.ModelBuildingRequest
 import org.apache.maven.model.building.ModelBuildingResult
+import org.apache.maven.model.locator.DefaultModelLocator
 import org.apache.maven.model.resolution.ModelResolver
 
 /**
@@ -93,7 +96,8 @@ class ArtifactResolver(
       fetcher = fetcher,
       repositories = repositories,
       suppressAddRepositoryWarnings = suppressAddRepositoryWarnings
-  )
+  ),
+  private val modelInterceptor: (Model) -> Model = { it }
 ) {
 
   /** Returns an [Artifact] parsed from a given maven style specification (group:id:version) */
@@ -174,6 +178,11 @@ class ArtifactResolver(
       is SUCCESSFUL -> { /* continue */ }
     }
     val modelBuilder = modelBuilderFactory.newInstance()
+      .setModelProcessor(
+        DefaultModelProcessor()
+          .setModelLocator(DefaultModelLocator())
+          .setModelReader(InterceptingMavenReader(interceptor = modelInterceptor))
+      )
     val req = DefaultModelBuildingRequest()
         .apply {
           modelResolver = resolver
