@@ -25,6 +25,7 @@ import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.SUC
 import java.io.IOException
 import java.net.ConnectException
 import java.nio.file.Files
+import java.util.concurrent.atomic.AtomicInteger
 import org.apache.maven.model.Repository
 import org.apache.maven.model.RepositoryPolicy
 import org.junit.After
@@ -71,6 +72,29 @@ class ResolutionTest {
                     <packaging>txt</packaging> 
                   </project>
                   """.trimIndent(),
+          fileContent = "baz\n"
+        )
+        .fakeArtifact(
+          repoUrl = "fake://repo",
+          coordinate = "foo.bar:system:2",
+          suffix = "txt",
+          pomContent = """<?xml version="1.0" encoding="UTF-8"?>
+              <project><modelVersion>4.0.0</modelVersion>
+                <groupId>foo.bar</groupId>
+                <artifactId>system</artifactId>
+                <version>2</version>
+                <packaging>txt</packaging>
+                <dependencies>
+                  <dependency>
+                    <groupId>some.random</groupId>
+                    <artifactId>system-dependency</artifactId>
+                    <version>1.0</version>
+                    <scope>system</scope>
+                    <systemPath>${"$"}{env.ANDROID_HOME}/platforms/android-29/android.jar</systemPath>
+                  </dependency>
+                </dependencies>
+              </project>
+              """.trimIndent(),
           fileContent = "baz\n"
         )
       )
@@ -279,5 +303,25 @@ class ResolutionTest {
     assertThat(pom.exists).isTrue()
     assertThat(file.toString()).isEqualTo("$cacheDir/foo/bar/baz/2/baz-2.txt")
     assertThat(file.exists).isTrue()
+  }
+
+  @Test fun testInterception() {
+    val count = AtomicInteger(0)
+    val resolver = ArtifactResolver(
+      cacheDir = cacheDir,
+      fetcher = fakeFetcher,
+      repositories = repositories
+    ) { model ->
+      model.apply {
+        dependencies = dependencies.filter { dep -> dep.scope != "system" }
+        count.incrementAndGet()
+      }
+    }
+    val artifact = resolver.artifactFor("foo.bar:system:2")
+    val (status, resolved) = resolver.resolve(artifact)
+    assertThat(status).isInstanceOf(SUCCESSFUL::class.java)
+    assertThat(resolved).isNotNull()
+    assertThat(resolved!!.model.dependencies).hasSize(0)
+    assertThat(count.get()).isEqualTo(1)
   }
 }
