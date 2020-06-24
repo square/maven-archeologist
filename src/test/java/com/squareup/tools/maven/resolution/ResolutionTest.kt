@@ -319,6 +319,7 @@ class ResolutionTest {
     }
     val artifact = resolver.artifactFor("foo.bar:system:2")
     val (status, resolved) = resolver.resolve(artifact)
+    if (status is FETCH_ERROR) { status.error?.let { throw it } }
     assertThat(status).isInstanceOf(SUCCESSFUL::class.java)
     assertThat(resolved).isNotNull()
     assertThat(resolved!!.model.dependencies).hasSize(0)

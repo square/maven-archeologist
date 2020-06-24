@@ -22,7 +22,6 @@ import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.NOT
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.SUCCESSFUL
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.SUCCESSFUL.FOUND_IN_CACHE
 import java.io.IOException
-import java.lang.IllegalArgumentException
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import kotlin.DeprecationLevel.WARNING
@@ -30,11 +29,11 @@ import org.apache.maven.model.Model
 import org.apache.maven.model.Repository
 import org.apache.maven.model.building.DefaultModelBuilderFactory
 import org.apache.maven.model.building.DefaultModelBuildingRequest
-import org.apache.maven.model.building.DefaultModelProcessor
+import org.apache.maven.model.building.ModelBuildingException
 import org.apache.maven.model.building.ModelBuildingRequest
 import org.apache.maven.model.building.ModelBuildingResult
-import org.apache.maven.model.locator.DefaultModelLocator
 import org.apache.maven.model.resolution.ModelResolver
+import org.apache.maven.model.validation.DefaultModelValidator
 
 /**
  * The main entry point to the library, which wraps (and mostly hides) the maven resolution
@@ -97,7 +96,7 @@ class ArtifactResolver(
       repositories = repositories,
       suppressAddRepositoryWarnings = suppressAddRepositoryWarnings
   ),
-  private val modelInterceptor: (Model) -> Model = { it }
+  private val modelInterceptor: (Model) -> Unit = { }
 ) {
 
   /** Returns an [Artifact] parsed from a given maven style specification (group:id:version) */
@@ -177,24 +176,32 @@ class ArtifactResolver(
       is INVALID_HASH -> if (strictHashValidation) return ResolutionResult(fetched, null)
       is SUCCESSFUL -> { /* continue */ }
     }
+
+    val validator = DefaultModelValidator()
     val modelBuilder = modelBuilderFactory.newInstance()
-      .setModelProcessor(
-        DefaultModelProcessor()
-          .setModelLocator(DefaultModelLocator())
-          .setModelReader(InterceptingMavenReader(interceptor = modelInterceptor))
-      )
+      .setModelValidator(NoopEffectiveModelValidator(validator)) // we will validate it later.
+
     val req = DefaultModelBuildingRequest()
         .apply {
           modelResolver = resolver
           pomFile = artifact.pom.localFile.toFile()
-          setProcessPlugins(false) // Auto-property inference is broken for this property.
           validationLevel = ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL
           systemProperties = System.getProperties()
+
+          // Auto-property inference is broken for boolean java functions in the pattern they use.
+          setProcessPlugins(false)
         }
-    val builder: ModelBuildingResult = modelBuilder.build(req)
+    val result: ModelBuildingResult = try {
+      val result = modelBuilder.build(req)
+      modelInterceptor.invoke(result.effectiveModel) // models are mutable
+      Validator.validateResult(result, validator, req) // validates the effective model, returns.
+    } catch (e: ModelBuildingException) {
+      return ResolutionResult(FETCH_ERROR(message = "Error processing model.", error = e), null)
+    }
+
     return ResolutionResult(
       status = fetched,
-      artifact = ResolvedArtifact(builder.effectiveModel, cacheDir, fetched is FOUND_IN_CACHE)
+      artifact = ResolvedArtifact(result.effectiveModel, cacheDir, fetched is FOUND_IN_CACHE)
     )
   }
 
