@@ -169,6 +169,8 @@ open class ClassifiedFile internal constructor(
 
 val Model.snapshot get() = version.endsWith("-SNAPSHOT")
 
+val Model.coordinate get() = "$groupId:$artifactId:$version"
+
 internal val String.groupPath get() = replace(".", "/")
 
 data class SimpleDownloadResult(var pom: Path, var main: Path, var sources: Path?)
