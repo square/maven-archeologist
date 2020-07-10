@@ -1,0 +1,52 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "my.group",
+    "module": "mylib",
+    "version": "1.2"
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "4.3",
+      "buildId": "abc123"
+    }
+  },
+  "variants": [
+    {
+      "name": "api",
+      "attributes": {
+        "org.gradle.usage": "java-api",
+        "org.gradle.category": "library",
+        "org.gradle.libraryelements": "jar",
+        "foo.bar.baz": "blah"
+      },
+      "files": [
+        {
+          "name": "mylib-api.jar",
+          "url": "mylib-api-1.2.jar",
+          "size": "1453",
+          "sha1": "abc12345",
+          "md5": "abc12345"
+        }
+      ],
+      "dependencies": [
+        {
+          "group": "some.group",
+          "module": "other-lib",
+          "version": {
+            "requires": "3.4"
+          },
+          "excludes": [
+            {
+              "group": "*",
+              "module": "excluded-lib"
+            }
+          ],
+          "attributes": {
+            "buildType": "debug"
+          }
+        }
+      ]
+    }
+  ]
+}

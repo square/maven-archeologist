@@ -1,0 +1,142 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.squareup.okio",
+    "module": "okio-multiplatform",
+    "version": "2.7.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "6.4.1",
+      "buildId": "rr33lv7ztfbvzhu54qsrpixwou"
+    }
+  },
+  "variants": [
+    {
+      "name": "iosArm64-api",
+      "attributes": {
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "ios_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../okio-iosarm64/2.7.0/okio-iosarm64-2.7.0.module",
+        "group": "com.squareup.okio",
+        "module": "okio-iosarm64",
+        "version": "2.7.0"
+      }
+    },
+    {
+      "name": "iosX64-api",
+      "attributes": {
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "ios_x64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../okio-iosx64/2.7.0/okio-iosx64-2.7.0.module",
+        "group": "com.squareup.okio",
+        "module": "okio-iosx64",
+        "version": "2.7.0"
+      }
+    },
+    {
+      "name": "js-api",
+      "attributes": {
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "available-at": {
+        "url": "../../okio-js/2.7.0/okio-js-2.7.0.module",
+        "group": "com.squareup.okio",
+        "module": "okio-js",
+        "version": "2.7.0"
+      }
+    },
+    {
+      "name": "js-runtime",
+      "attributes": {
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.platform.type": "js"
+      },
+      "available-at": {
+        "url": "../../okio-js/2.7.0/okio-js-2.7.0.module",
+        "group": "com.squareup.okio",
+        "module": "okio-js",
+        "version": "2.7.0"
+      }
+    },
+    {
+      "name": "jvm-api",
+      "attributes": {
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "available-at": {
+        "url": "../../okio/2.7.0/okio-2.7.0.module",
+        "group": "com.squareup.okio",
+        "module": "okio",
+        "version": "2.7.0"
+      }
+    },
+    {
+      "name": "jvm-runtime",
+      "attributes": {
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "available-at": {
+        "url": "../../okio/2.7.0/okio-2.7.0.module",
+        "group": "com.squareup.okio",
+        "module": "okio",
+        "version": "2.7.0"
+      }
+    },
+    {
+      "name": "linuxX64-api",
+      "attributes": {
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "linux_x64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../okio-linuxx64/2.7.0/okio-linuxx64-2.7.0.module",
+        "group": "com.squareup.okio",
+        "module": "okio-linuxx64",
+        "version": "2.7.0"
+      }
+    },
+    {
+      "name": "macosX64-api",
+      "attributes": {
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "macos_x64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "available-at": {
+        "url": "../../okio-macosx64/2.7.0/okio-macosx64-2.7.0.module",
+        "group": "com.squareup.okio",
+        "module": "okio-macosx64",
+        "version": "2.7.0"
+      }
+    },
+    {
+      "name": "metadata-api",
+      "attributes": {
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.platform.type": "common"
+      },
+      "available-at": {
+        "url": "../../okio-metadata/2.7.0/okio-metadata-2.7.0.module",
+        "group": "com.squareup.okio",
+        "module": "okio-metadata",
+        "version": "2.7.0"
+      }
+    }
+  ]
+}

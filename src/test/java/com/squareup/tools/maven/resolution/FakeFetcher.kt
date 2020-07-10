@@ -56,6 +56,7 @@ internal fun MutableMap<String, String>.fakeArtifact(
   suffix: String,
   pomContent: String,
   fileContent: String,
+  gradleModuleContent: String? = null,
   sourceContent: String? = null,
   realHash: Boolean = true,
   classifiedFiles: Map<String, Pair<String, String>> = mapOf() // classifier=(content=suffix)
@@ -74,6 +75,11 @@ internal fun MutableMap<String, String>.fakeArtifact(
     put("$dir/$filePrefix-sources.jar", sourceContent)
     put("$dir/$filePrefix-sources.jar.sha1", if (realHash) sourceContent.sha1() else "badhash")
     put("$dir/$filePrefix-sources.jar.md5", if (realHash) sourceContent.md5() else "badhash")
+  }
+  if (gradleModuleContent != null) {
+    put("$dir/$filePrefix.module", gradleModuleContent)
+    put("$dir/$filePrefix.module.sha1", if (realHash) gradleModuleContent.sha1() else "badhash")
+    put("$dir/$filePrefix.module.md5", if (realHash) gradleModuleContent.md5() else "badhash")
   }
   for ((classifier, value) in classifiedFiles) {
     val (content, suffix) = value // can't nest destructuring

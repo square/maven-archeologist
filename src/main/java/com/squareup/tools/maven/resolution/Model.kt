@@ -15,6 +15,7 @@
  */
 package com.squareup.tools.maven.resolution
 
+import com.squareup.tools.maven.resolution.gradle.Module
 import java.nio.file.Path
 import org.apache.maven.model.Model
 
@@ -40,12 +41,16 @@ open class Artifact
   val snapshot get() = version.endsWith("-SNAPSHOT")
 
   val pom = PomFile(this, cacheDir)
+
+  val gradleModule = GradleModuleFile(this, cacheDir)
 }
 
 /** Represents an artifact whose metadata has been fully resolved by maven */
 class ResolvedArtifact internal constructor(
-  /** The underlying maven model object. */
+  /** The underlying "effective" maven model object. */
   val model: Model,
+  /** The gradle model file supplied as supplementary/alternative metadata for some artifacts. */
+  val module: Module?,
   /** The cache directory into which this file was fetched (or from which it was read) */
   cacheDir: Path,
   /** Whether this artifact metadata was remotely fetched or satisfied from the local cache. */
@@ -97,7 +102,7 @@ interface FileSpec {
 
 class PomFile internal constructor(
   override val artifact: Artifact,
-  val cacheDir: Path
+  private val cacheDir: Path
 ) : FileSpec {
   override val coordinate: String get() = artifact.coordinate
 
@@ -108,6 +113,25 @@ class PomFile internal constructor(
           .resolve(artifactId)
           .resolve(version)
           .resolve("$artifactId-$version.pom")
+    }
+  }
+
+  override val localFile: Path by lazy { cacheDir.resolve(path) }
+}
+
+class GradleModuleFile internal constructor(
+  override val artifact: Artifact,
+  private val cacheDir: Path
+) : FileSpec {
+  override val coordinate: String get() = artifact.coordinate
+
+  override val path: Path by lazy {
+    // e.g. com/google/guava/guava/16.0.1/guava-16.0.1.pom
+    with(artifact) {
+      cacheDir.fileSystem.getPath(groupId.groupPath)
+        .resolve(artifactId)
+        .resolve(version)
+        .resolve("$artifactId-$version.module")
     }
   }
 
@@ -173,4 +197,9 @@ val Model.coordinate get() = "$groupId:$artifactId:$version"
 
 internal val String.groupPath get() = replace(".", "/")
 
-data class SimpleDownloadResult(var pom: Path, var main: Path, var sources: Path?)
+data class SimpleDownloadResult(
+  var pom: Path,
+  var main: Path,
+  var sources: Path?,
+  var gradleModule: Path?
+)

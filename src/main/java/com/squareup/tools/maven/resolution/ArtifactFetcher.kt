@@ -15,8 +15,8 @@
  */
 package com.squareup.tools.maven.resolution
 
-import org.apache.maven.model.Repository
 import kotlin.DeprecationLevel.WARNING
+import org.apache.maven.model.Repository
 
 sealed class FetchStatus {
   sealed class RepositoryFetchStatus : FetchStatus() {
@@ -62,9 +62,20 @@ interface ArtifactFetcher {
   fun fetchArtifact(artifactFile: ArtifactFile, repositories: List<Repository>): FetchStatus
 
   /**
-   * Performs a fetch against any repositories offered (in order), downloads the artifact file (and any
-   * hash files), and if it finds it, performs validation. Returns false if the file wasn't fetched,
-   * or if the file's validation failed.
+   * Performs a fetche against any repositories offered (in order), downloads the artifact file
+   * (and any hash files), and, if it finds them, performs content hash validation. Returns a
+   * [FetchStatus] describing the outcome. The file will be written to the [FileSpec.localFile]
+   * of the given [file], or discovered there, if previously downloaded.
    */
-  fun fetchFile(fetchFile: FileSpec, repositories: List<Repository>): FetchStatus
+  fun fetchFile(file: FileSpec, repositories: List<Repository>): FetchStatus
+
+  /**
+   * Performs fetches against any repositories offered (in order), downloads the artifact files
+   * (and any hash files), and, if it finds them, performs content hash validation. Returns a
+   * map of [FileSpec]s to [FetchStatus]es based the outcome. The files will be written to the
+   * [FileSpec.localFile] of the given [files], or discovered there, if previously downloaded.
+   *
+   * This method may perform serialized or parallel fetches, as determined by the implementation.
+   */
+  fun fetchFiles(vararg files: FileSpec, repositories: List<Repository>): Map<FileSpec, FetchStatus>
 }

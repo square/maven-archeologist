@@ -1,0 +1,90 @@
+{
+  "formatVersion": "1.0",
+  "component": {
+    "group": "my.group",
+    "module": "mylib",
+    "version": "1.2"
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "4.3",
+      "buildId": "abc123"
+    }
+  },
+  "variants": [
+    {
+      "name": "api",
+      "attributes": {
+        "org.gradle.usage": "java-api",
+        "org.gradle.category": "library",
+        "org.gradle.libraryelements": "jar"
+      },
+      "files": [
+        {
+          "name": "mylib-api.jar",
+          "url": "mylib-api-1.2.jar",
+          "size": "1453",
+          "sha1": "abc12345",
+          "md5": "abc12345"
+        }
+      ],
+      "dependencies": [
+        {
+          "group": "some.group",
+          "module": "other-lib",
+          "version": {
+            "requires": "3.4"
+          },
+          "excludes": [
+            {
+              "group": "*",
+              "module": "excluded-lib"
+            }
+          ],
+          "attributes": {
+            "buildType": "debug"
+          }
+        }
+      ]
+    },
+    {
+      "name": "runtime",
+      "attributes": {
+        "org.gradle.usage": "java-runtime",
+        "org.gradle.category": "library",
+        "org.gradle.libraryelements": "jar"
+      },
+      "files": [
+        {
+          "name": "mylib.jar",
+          "url": "mylib-1.2.jar",
+          "size": "4561",
+          "sha1": "abc12345",
+          "md5": "abc12345"
+        }
+      ],
+      "dependencies": [
+        {
+          "group": "some.group",
+          "module": "other-lib",
+          "version": {
+            "requires": "[3.0, 4.0)",
+            "prefers": "3.4",
+            "rejects": [
+              "3.4.1"
+            ]
+          }
+        }
+      ],
+      "dependencyConstraints": [
+        {
+          "group": "some.group",
+          "module": "other-lib-2",
+          "version": {
+            "requires": "1.0"
+          }
+        }
+      ]
+    }
+  ]
+}

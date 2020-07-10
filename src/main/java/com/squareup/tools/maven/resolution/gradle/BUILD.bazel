@@ -14,17 +14,12 @@ load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
 package(default_visibility = ["//:__subpackages__"])
 
 kt_jvm_library(
-    name = "resolution",
+    name = "gradle",
     srcs = glob(["*.kt"]),
     deps = [
-        "//src/main/java/com/squareup/tools/maven/resolution/gradle",
         "@maven//com/squareup/moshi",
         "@maven//com/squareup/moshi:moshi-kotlin",
-        "@maven//com/squareup/okhttp3:okhttp",
         "@maven//com/squareup/okio",
-        "@maven//org/apache/maven:maven-builder-support",
-        "@maven//org/apache/maven:maven-model",
-        "@maven//org/apache/maven:maven-model-builder",
     ],
 )
 
