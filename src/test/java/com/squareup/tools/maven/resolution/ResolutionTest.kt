@@ -133,18 +133,9 @@ class ResolutionTest {
     check(!cacheDir.exists) { "Failed to tear down and delete temp directory." }
   }
 
-  @Test fun testLegacyResolution() {
-    val artifact = resolver.artifactFor("foo.bar:bar:1")
-    val resolved = resolver.resolveArtifact(artifact)
-    assertThat(resolved).isNotNull()
-    assertThat(resolved!!.pom.localFile.exists).isTrue()
-    assertThat(resolved.pom.localFile.readText()).contains("<groupId>foo.bar</groupId>")
-    assertThat(resolved.pom.localFile.readText()).contains("<artifactId>bar</artifactId>")
-    assertThat(resolved.pom.localFile.readText()).contains("<version>1</version>")
-  }
-
   @Test fun testBasicResolution() {
     val artifact = resolver.artifactFor("foo.bar:bar:1")
+    assertThat(artifact.pom.localFile.exists).isFalse()
     val (status, resolved) = resolver.resolve(artifact)
     assertThat(status).isInstanceOf(SUCCESSFUL::class.java)
     assertThat(resolved).isNotNull()
@@ -172,7 +163,9 @@ class ResolutionTest {
       })
     )
     val artifact = badResolver.artifactFor("foo.bar:boq:1")
+    assertThat(artifact.pom.localFile.exists).isFalse()
     val (status, resolved) = badResolver.resolve(artifact)
+    assertThat(artifact.pom.localFile.exists).isFalse()
     assertThat(status).isInstanceOf(ERROR::class.java)
     assertThat(resolved).isNull()
     status as ERROR
@@ -194,7 +187,9 @@ class ResolutionTest {
       repositories = repositories
     )
     val artifact = fakeResolver.artifactFor("foo.bar:bar:1")
+    assertThat(artifact.pom.localFile.exists).isFalse()
     val (status, resolved) = fakeResolver.resolve(artifact)
+    assertThat(artifact.pom.localFile.exists).isTrue()
     assertThat(status).isInstanceOf(INVALID_HASH::class.java)
     assertThat(resolved).isNull()
   }
@@ -206,14 +201,18 @@ class ResolutionTest {
       repositories = repositories
     )
     val artifact = fakeResolver.artifactFor("foo.bar:bar:1")
+    assertThat(artifact.pom.localFile.exists).isFalse()
     val (status, resolved) = fakeResolver.resolve(artifact)
+    assertThat(artifact.pom.localFile.exists).isTrue()
     assertThat(status).isInstanceOf(INVALID_HASH::class.java)
     assertThat(resolved).isNotNull()
   }
 
   @Test fun testArtifactDownload() {
     val artifact = resolver.artifactFor("foo.bar:bar:1")
-    val resolved = resolver.resolveArtifact(artifact)
+    assertThat(artifact.pom.localFile.exists).isFalse()
+    val resolved = resolver.resolve(artifact).artifact
+    assertThat(artifact.pom.localFile.exists).isTrue()
     requireNotNull(resolved)
     val mainStatus = resolver.downloadArtifact(resolved)
     assertThat(mainStatus).isInstanceOf(SUCCESSFUL::class.java)
@@ -221,7 +220,9 @@ class ResolutionTest {
 
   @Test fun testSourcesDownload() {
     val artifact = resolver.artifactFor("foo.bar:bar:1")
-    val resolved = resolver.resolveArtifact(artifact)
+    assertThat(artifact.pom.localFile.exists).isFalse()
+    val resolved = resolver.resolve(artifact).artifact
+    assertThat(artifact.pom.localFile.exists).isTrue()
     requireNotNull(resolved)
     val sourcesStatus = resolver.downloadSources(resolved)
     assertThat(sourcesStatus).isInstanceOf(SUCCESSFUL::class.java)
@@ -229,7 +230,9 @@ class ResolutionTest {
 
   @Test fun testNoSourcesDownload() {
     val artifact = resolver.artifactFor("foo.bar:baz:2")
-    val resolved = resolver.resolveArtifact(artifact)
+    assertThat(artifact.pom.localFile.exists).isFalse()
+    val resolved = resolver.resolve(artifact).artifact
+    assertThat(artifact.pom.localFile.exists).isTrue()
     requireNotNull(resolved)
     val sourcesStatus = resolver.downloadSources(resolved)
     assertThat(sourcesStatus).isInstanceOf(NOT_FOUND::class.java)
@@ -237,7 +240,9 @@ class ResolutionTest {
 
   @Test fun testSubArtifactDownload() {
     val artifact = resolver.artifactFor("foo.bar:bar:1")
-    val resolved = resolver.resolveArtifact(artifact)
+    assertThat(artifact.pom.localFile.exists).isFalse()
+    val resolved = resolver.resolve(artifact).artifact
+    assertThat(artifact.pom.localFile.exists).isTrue()
     requireNotNull(resolved)
     val classified = resolved.subArtifact("extra", "bargle")
     val classifiedStatus = resolver.downloadSubArtifact(classified)
@@ -249,7 +254,9 @@ class ResolutionTest {
 
   @Test fun testSubArtifactNotFoundDownload() {
     val artifact = resolver.artifactFor("foo.bar:baz:2")
-    val resolved = resolver.resolveArtifact(artifact)
+    assertThat(artifact.pom.localFile.exists).isFalse()
+    val resolved = resolver.resolve(artifact).artifact
+    assertThat(artifact.pom.localFile.exists).isTrue()
     requireNotNull(resolved)
     val classified = resolved.subArtifact("extra", "bargle")
     val classifiedStatus = resolver.downloadSubArtifact(classified)
@@ -284,17 +291,17 @@ class ResolutionTest {
   @Test fun testFetchAvoidance() {
     assertThat(fakeFetcher.count).isEqualTo(0)
     resolver.download("foo.bar:bar:1", true)
-    assertThat(fakeFetcher.count).isEqualTo(9)
+    assertThat(fakeFetcher.count).isEqualTo(12)
     resolver.download("foo.bar:bar:1", true)
-    assertThat(fakeFetcher.count).isEqualTo(9)
+    assertThat(fakeFetcher.count).isEqualTo(12)
   }
 
   @Test fun testFetchAvoidanceNoSources() {
     assertThat(fakeFetcher.count).isEqualTo(0)
     resolver.download("foo.bar:bar:1", false)
-    assertThat(fakeFetcher.count).isEqualTo(6)
-    resolver.download("foo.bar:bar:1", true)
     assertThat(fakeFetcher.count).isEqualTo(9)
+    resolver.download("foo.bar:bar:1", true)
+    assertThat(fakeFetcher.count).isEqualTo(12)
   }
 
   @Test fun testLegacySimpleDownloadNoSources() {
@@ -318,7 +325,9 @@ class ResolutionTest {
       }
     }
     val artifact = resolver.artifactFor("foo.bar:system:2")
+    assertThat(artifact.pom.localFile.exists).isFalse()
     val (status, resolved) = resolver.resolve(artifact)
+    assertThat(artifact.pom.localFile.exists).isTrue()
     assertThat(status).isInstanceOf(SUCCESSFUL::class.java)
     assertThat(resolved).isNotNull()
     assertThat(resolved!!.model.dependencies).hasSize(0)

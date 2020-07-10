@@ -16,6 +16,7 @@
 package com.squareup.tools.maven.resolution
 
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus
+import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.FETCH_ERROR
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption.ATOMIC_MOVE
@@ -37,7 +38,23 @@ abstract class AbstractArtifactFetcher(protected val cacheDir: Path) : ArtifactF
   override fun fetchFile(
     artifactFile: FileSpec,
     repositories: List<Repository>
-  ): FetchStatus = cachedFileOrFetch(artifactFile, repositories)
+  ): FetchStatus = fetchFiles(artifactFile, repositories = repositories).entries.first().value
+
+  override fun fetchFiles(
+    vararg files: FileSpec,
+    repositories: List<Repository>
+  ): Map<FileSpec, FetchStatus> {
+    return files.map { file ->
+      file to try {
+        cachedFileOrFetch(file, repositories)
+      } catch (e: Exception) {
+        FETCH_ERROR(
+          error = e,
+          message = "Error fetching ${file.path} from ${repositories.map{ it.id }}"
+        )
+      }
+    }.toMap()
+  }
 
   /**
    * The workhorse method which actually fetches a file and writes it to the local cacheDir in the
@@ -45,7 +62,7 @@ abstract class AbstractArtifactFetcher(protected val cacheDir: Path) : ArtifactF
    * `"${repository.url}/$path"` to `cacheDir.resolve(path)` for any URLs they support, and return
    * the appropriate RepositoryFetchStatus based on the success of that operation.
    */
-  abstract fun fetchFile(
+  protected abstract fun fetchFile(
     fileSpec: FileSpec,
     repository: Repository,
     path: Path
@@ -53,7 +70,7 @@ abstract class AbstractArtifactFetcher(protected val cacheDir: Path) : ArtifactF
 
   private fun cachedFileOrFetch(fileSpec: FileSpec, repositories: List<Repository>): FetchStatus {
     if (fileSpec.artifact.snapshot)
-      return RepositoryFetchStatus.FETCH_ERROR(
+      return FETCH_ERROR(
           message = "Snapshot versions not supported (${fileSpec.artifact.coordinate})"
       )
 
@@ -68,7 +85,7 @@ abstract class AbstractArtifactFetcher(protected val cacheDir: Path) : ArtifactF
             )
           }
           when (result) {
-            is RepositoryFetchStatus.FETCH_ERROR -> errors[repository.id] = result
+            is FETCH_ERROR -> errors[repository.id] = result
             is RepositoryFetchStatus.NOT_FOUND -> {
               /* Ignore "not founds" - we'll return that if we never get a file by the end. */
             }

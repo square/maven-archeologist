@@ -74,7 +74,7 @@ class Resolve : CliktCommand() {
     artifacts
         .map { resolver.artifactFor(it) }
         .forEach { artifact ->
-          val resolvedArtifact = resolver.resolveArtifact(artifact)
+          val resolvedArtifact = resolver.resolve(artifact).artifact
           resolvedArtifact?.apply {
             report(
                 "Artifact model for ${resolvedArtifact.coordinate} successfully resolved.")

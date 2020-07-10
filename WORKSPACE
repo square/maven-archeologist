@@ -9,30 +9,31 @@
 # is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 # or implied. See the License for the specific language governing permissions and limitations under
 # the License.
-workspace(name = "maven_archologist")
+workspace(name = "maven_archeologist")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load(
     "//:versions.bzl",
-    "KOTLINC_RELEASE_URL",
     "KOTLINC_RELEASE_SHA",
-    "KOTLIN_RULES_URL",
+    "KOTLINC_RELEASE_URL",
     "KOTLIN_RULES_SHA",
-    "maven_artifacts",
-    "MAVEN_REPOSITORY_RULES_VERSION",
+    "KOTLIN_RULES_URL",
     "MAVEN_REPOSITORY_RULES_SHA",
+    "MAVEN_REPOSITORY_RULES_VERSION",
+    "maven_artifacts",
 )
 
 # Load the kotlin rules repository, and setup kotlin rules and toolchain.
 http_archive(
     name = "io_bazel_rules_kotlin",
-    urls = [ KOTLIN_RULES_URL ],
     sha256 = KOTLIN_RULES_SHA,
+    urls = [KOTLIN_RULES_URL],
 )
+
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories", "kt_register_toolchains")
 
 kotlin_repositories(compiler_release = {
-    "urls": [ KOTLINC_RELEASE_URL ],
+    "urls": [KOTLINC_RELEASE_URL],
     "sha256": KOTLINC_RELEASE_SHA,
 })
 

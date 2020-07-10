@@ -21,6 +21,9 @@ import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.FET
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.NOT_FOUND
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.SUCCESSFUL
 import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.SUCCESSFUL.FOUND_IN_CACHE
+import com.squareup.tools.maven.resolution.FetchStatus.RepositoryFetchStatus.SUCCESSFUL.SUCCESSFULLY_FETCHED
+import com.squareup.tools.maven.resolution.gradle.GradleModuleParser
+import com.squareup.tools.maven.resolution.gradle.Module
 import java.io.IOException
 import java.nio.file.FileSystems
 import java.nio.file.Path
@@ -39,8 +42,10 @@ import org.apache.maven.model.validation.DefaultModelValidator
  * The main entry point to the library, which wraps (and mostly hides) the maven resolution
  * infrastructure.
  *
- * [ArtifactResolver] holds two key workhorse functions: [ArtifactResolver.resolveArtifact] and
- * [ArtifactResolver.downloadArtifact], plus a convenience function [ArtifactResolver.download].
+ * [ArtifactResolver] holds two key workhorse functions: [ArtifactResolver.resolve] and
+ * [ArtifactResolver.downloadArtifact] (and some related sub-artifact downloading functions),
+ * plus a convenience function [ArtifactResolver.download] which just downloads the common
+ * files and returns a structure with paths to their location..
  *
  * Intended usage is simple, assuming no need to specify a lot of configuration:
  *
@@ -51,13 +56,16 @@ import org.apache.maven.model.validation.DefaultModelValidator
  * val result = resolver.download(resolvedArtifact) // returns FetchStatus
  * if (result is SUCCESSFUL) { /* win! */ }
  * ```
+ * This is what you would use, also, if you needed access to the maven model or gradle module
+ * metadata, which are located on [ResolvedArtifact.model] and [ResolvedArtifact.gradleModule].
  *
  * A simpler option (if you don't need programmatic access to the resolved model information) is
  * to use [ArtifactResolver.download] which can be invoked like so:
  *
  * ```
  * val resolver = ArtifactResolver() // creates a resolver with repo list defaulting to maven central
- * val (pom, artifact) = resolver.download("com.google.guava:guava:27.1-jre")
+ * val (pom, artifact, sources, module) = resolver.download("com.google.guava:guava:27.1-jre")
+ * // module will be null, as there is no gradle .module file for this artifact
  * ```
  *
  * Configuring repositories is easy:
@@ -85,11 +93,14 @@ import org.apache.maven.model.validation.DefaultModelValidator
 class ArtifactResolver(
   suppressAddRepositoryWarnings: Boolean = false,
   private val strictHashValidation: Boolean = false,
+  /** Should the resolver fetch the gradle module when fetching the pom file? */
+  private val resolveGradleModule: Boolean = true,
   private val cacheDir: Path =
       FileSystems.getDefault().getPath("${System.getProperty("user.home")}/.m2/repository"),
   private val fetcher: ArtifactFetcher = HttpArtifactFetcher(cacheDir = cacheDir),
   private val modelBuilderFactory: DefaultModelBuilderFactory = DefaultModelBuilderFactory(),
   private val repositories: List<Repository> = Repositories.DEFAULT,
+  private val gradleModuleParser: GradleModuleParser = GradleModuleParser(),
   private val resolver: ModelResolver = SimpleHttpResolver(
       cacheDir = cacheDir,
       fetcher = fetcher,
@@ -101,57 +112,21 @@ class ArtifactResolver(
 
   /** Returns an [Artifact] parsed from a given maven style specification (group:id:version) */
   fun artifactFor(spec: String): Artifact {
-    with(spec.split(":")) {
+    return with(spec.split(":")) {
       when (this.size) {
         3 -> {
           val (groupId, artifactId, versionId) = this
-          return Artifact(groupId, artifactId, versionId, cacheDir)
+          Artifact(groupId, artifactId, versionId, cacheDir)
         }
         4 -> {
           val (groupId, artifactId, _, versionId) = this
           // we throw away packaging, as we will decide from the pom resolution, what the
           // packaging type is.
-          return Artifact(groupId, artifactId, versionId, cacheDir)
+          Artifact(groupId, artifactId, versionId, cacheDir)
         }
-        else -> {
-          throw IllegalArgumentException("Invalid artifact format: $spec")
-        }
+        else -> throw IllegalArgumentException("Invalid artifact format: $spec")
       }
     }
-  }
-
-  /**
-   * Resolves the supplied artifact, downloading any necessary POM files needed to resolve
-   * the model, returning a [ResolvedArtifact] if the model was successfully resolved.
-   * This is an older API, and it logs errors/warnings when resolution fails, rather than returning
-   * a status, and letting the calling code decide whether to log or handle.
-   */
-  @Deprecated(
-    "Older method which does not include a FetchStatus.",
-    replaceWith = ReplaceWith("resolve(artifact)")
-  )
-  fun resolveArtifact(artifact: Artifact): ResolvedArtifact? {
-    val result = resolve(artifact)
-    when (result.status) {
-      is INVALID_HASH -> result.artifact.also {
-        warn { "Hashes did not match for artifact ${artifact.coordinate}" }
-      }
-      is FETCH_ERROR -> {
-        val repositoryIds = repositories.map { repo -> repo.id }
-        error { "Could not resolve artifact pom for ${artifact.coordinate}: $repositoryIds" }
-      }
-      is ERROR -> {
-        error { "Errors from repositories while resolving ${artifact.coordinate}." }
-        result.status.errors.entries.forEach { (id, error) ->
-          error { "    $id: $error" }
-        }
-      }
-      is NOT_FOUND -> {
-        val repositoryIds = repositories.map { repo -> repo.id }
-        error { "No artifact found ${artifact.coordinate} in repositories $repositoryIds" }
-      }
-    }
-    return result.artifact
   }
 
   /**
@@ -168,41 +143,98 @@ class ArtifactResolver(
     if (artifact is ResolvedArtifact) return ResolutionResult(FOUND_IN_CACHE, artifact)
 
     info { "Fetching ${artifact.coordinate}" }
-    val fetched = fetcher.fetchPom(artifact.pom, repositories = repositories)
-    when (fetched) {
-      is ERROR -> return ResolutionResult(fetched, null)
-      is FETCH_ERROR -> return ResolutionResult(fetched, null)
-      is NOT_FOUND -> return ResolutionResult(fetched, null)
-      is INVALID_HASH -> if (strictHashValidation) return ResolutionResult(fetched, null)
+    val pomResult = fetcher.fetchFile(artifact.pom, repositories = repositories)
+
+    when (pomResult) {
+      is ERROR -> return ResolutionResult(pomResult, null)
+      is FETCH_ERROR -> return ResolutionResult(pomResult, null)
+      is NOT_FOUND -> return ResolutionResult(pomResult, null)
+      is INVALID_HASH -> if (strictHashValidation) return ResolutionResult(pomResult, null)
       is SUCCESSFUL -> { /* continue */ }
     }
+    // Only a limited number of cases to handle here. Split in two from the above when, because this
+    // logic relates to gradle module fetching, not the fetch status of the pom.
+    val gradleResult = when (pomResult) {
+      is SUCCESSFULLY_FETCHED, INVALID_HASH -> {
+        // only try to fetch the module if we just fetched the pom, thereby caching the non-existance
+        // of modules which were not fetched when the pom was fetched. This replcates gradle's
+        // semantic, which doesn't try to get the module file if it finds a cached .pom file but no
+        // locally cached .module file.
+        //
+        // Also, fetch as a precaution on (lenient) INVALID_HASH of the pom, since we can't tell
+        // the difference between fetched vs. found in the invalid hash case.
+        // TODO(cgruber) move hash validity state into a property of the FetchStatus success states
+        fetcher.fetchFile(artifact.gradleModule, repositories = repositories).let { status ->
+          when (status) {
+            is ERROR -> return ResolutionResult(status, null)
+            is FETCH_ERROR -> return ResolutionResult(status, null)
+            is INVALID_HASH -> {
+              if (!strictHashValidation) status
+              else return ResolutionResult(status, null)
+            }
+            else -> status // successful or not found
+          }
+        }
+      }
+      is FOUND_IN_CACHE -> if (artifact.gradleModule.localFile.exists) FOUND_IN_CACHE else NOT_FOUND
+      else -> NOT_FOUND
+    }
 
+    val modelResult = try {
+      resolveMavenModel(artifact.pom)
+    } catch (e: ModelBuildingException) {
+      return ResolutionResult(
+        FETCH_ERROR(message = "Error processing maven pom.", error = e),
+        null
+      )
+    }
+
+    val gradleModel = try {
+      if (gradleResult is SUCCESSFUL || (!strictHashValidation && gradleResult is INVALID_HASH)) {
+        resolveGradleModel(artifact.gradleModule)
+      } else null
+    } catch (e: IOException) {
+      return ResolutionResult(
+        FETCH_ERROR(message = "Error parsing gradle module.", error = e),
+        null
+      )
+    }
+
+    return ResolutionResult(
+      status = pomResult,
+      artifact = ResolvedArtifact(
+        modelResult.effectiveModel,
+        gradleModel,
+        cacheDir,
+        pomResult is FOUND_IN_CACHE
+      )
+    )
+  }
+
+  private fun resolveGradleModel(moduleFile: GradleModuleFile): Module? {
+    return if (moduleFile.localFile.exists) {
+      gradleModuleParser.parse(moduleFile.localFile)
+    } else null
+  }
+
+  private fun resolveMavenModel(pom: PomFile): ModelBuildingResult {
     val validator = DefaultModelValidator()
     val modelBuilder = modelBuilderFactory.newInstance()
       .setModelValidator(NoopEffectiveModelValidator(validator)) // we will validate it later.
 
     val req = DefaultModelBuildingRequest()
-        .apply {
-          modelResolver = resolver
-          pomFile = artifact.pom.localFile.toFile()
-          validationLevel = ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL
-          systemProperties = System.getProperties()
+      .apply {
+        modelResolver = resolver
+        pomFile = pom.localFile.toFile()
+        validationLevel = ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL
+        systemProperties = System.getProperties()
 
-          // Auto-property inference is broken for boolean java functions in the pattern they use.
-          setProcessPlugins(false)
-        }
-    val result: ModelBuildingResult = try {
-      val result = modelBuilder.build(req)
-      modelInterceptor.invoke(result.effectiveModel) // models are mutable
-      Validator.validateResult(result, validator, req) // validates the effective model, returns.
-    } catch (e: ModelBuildingException) {
-      return ResolutionResult(FETCH_ERROR(message = "Error processing model.", error = e), null)
-    }
-
-    return ResolutionResult(
-      status = fetched,
-      artifact = ResolvedArtifact(result.effectiveModel, cacheDir, fetched is FOUND_IN_CACHE)
-    )
+        // Auto-property inference is broken for boolean java functions in the pattern they use.
+        setProcessPlugins(false)
+      }
+    val result = modelBuilder.build(req)
+    modelInterceptor.invoke(result.effectiveModel) // models are mutable
+    return Validator.validateResult(result, validator, req)
   }
 
   /**
@@ -268,16 +300,20 @@ class ArtifactResolver(
   @Throws(IOException::class)
   fun download(coordinate: String, downloadSources: Boolean = false): SimpleDownloadResult {
     val artifact = artifactFor(coordinate)
-    val resolvedArtifact = resolveArtifact(artifact)
-        ?: throw IOException("Could not resolve pom file for $coordinate")
+    val resolution = resolve(artifact)
+    val resolvedArtifact = resolution.artifact
+        ?: throw IOException("Could not resolve pom file for $coordinate: ${resolution.status}")
     val status = downloadArtifact(resolvedArtifact)
     val sourcesStatus = if (downloadSources) downloadSources(resolvedArtifact) else null
     if (status is SUCCESSFUL)
       return SimpleDownloadResult(
-        resolvedArtifact.pom.localFile,
-        resolvedArtifact.main.localFile,
-        if (sourcesStatus != null && sourcesStatus is SUCCESSFUL)
-          resolvedArtifact.sources.localFile else null
+        pom = resolvedArtifact.pom.localFile,
+        main = resolvedArtifact.main.localFile,
+        sources = if (sourcesStatus != null && sourcesStatus is SUCCESSFUL)
+          resolvedArtifact.sources.localFile else null,
+        gradleModule = with(resolvedArtifact.gradleModule.localFile) {
+          this.takeIf { it.exists }
+        }
       )
     else throw IOException("Could not download artifact for $coordinate: $status")
   }

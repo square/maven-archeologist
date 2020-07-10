@@ -64,7 +64,10 @@ DIRECT_ARTIFACTS = {
         "testonly": True,
         "exclude": ["com.google.guava:failureaccess", "com.google.guava:listenablefuture"],
     },
-    "com.squareup.okhttp3:okhttp:4.4.1": {"insecure": True},
+    "com.squareup.okhttp3:okhttp:4.7.2": {"insecure": True},
+    "com.squareup.okio:okio:2.6.0": {"insecure": True},
+    "com.squareup.moshi:moshi:1.9.3": {"insecure": True},
+    "com.squareup.moshi:moshi-kotlin:1.9.3": {"insecure": True},
     "org.apache.maven:maven-artifact:%s" % MAVEN_LIBRARY_VERSION: {"insecure": True},
     "org.apache.maven:maven-builder-support:%s" % MAVEN_LIBRARY_VERSION: {"insecure": True},
     "org.apache.maven:maven-model:%s" % MAVEN_LIBRARY_VERSION: {"insecure": True},
@@ -82,7 +85,6 @@ TRANSITIVE_ARTIFACTS = [
     "com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava",
     "com.google.j2objc:j2objc-annotations:1.1",
     "com.googlecode.java-diff-utils:diffutils:1.3.0",
-    "com.squareup.okio:okio:2.4.3",
     "org.apache.commons:commons-lang3:3.8.1",
     "org.checkerframework:checker-compat-qual:2.5.5",
     "org.checkerframework:checker-qual:2.5.2",
@@ -92,6 +94,7 @@ TRANSITIVE_ARTIFACTS = [
     "org.hamcrest:hamcrest-core:1.3",
     "org.jetbrains.kotlin:kotlin-stdlib-common:%s" % KOTLIN_VERSION,
     "org.jetbrains.kotlin:kotlin-stdlib:%s" % KOTLIN_VERSION,
+    "org.jetbrains.kotlin:kotlin-reflect:%s" % KOTLIN_VERSION,
     "org.jetbrains:annotations:13.0",
 ]
 
