@@ -27,6 +27,9 @@ the "effective project model", validating hashes, etc.
     + [Local Artifact Cache](#local-artifact-cache)
     + [Proxies and fetching](#proxies-and-fetching)
     + [Comparing Artifact Versions](#comparing-artifact-versions)
+    + [Data Models](#data-models)
+       * [Maven](#maven)
+       * [Gradle](#gradle)   
   * [Demo CLI](#demo-cli)
   * [Possible uses](#possible-uses)
   * [Core Capabilities](#core-capabilities)
@@ -321,6 +324,48 @@ println(versions)
 ```
 
 > Note: 2a.0 comes after 2.0 because 2a is non-numeric and so is lexically compared.
+
+## Data Models
+
+### Maven
+
+A maven metadata model is supplied from a `ResolvedModel` via the `model` property. This is
+an actual maven data model, using maven's [published model object APIs][maven-api].
+
+It is an "effective model", meaning all resolution of parent metadata, `dependencyManagement`
+constraints, property substitution (except env properties, which maven doesn't seem to resolve
+during effective-pom generation).
+
+[maven-api]: https://maven.apache.org/ref/3.6.3/maven-model/apidocs/index.html?org/apache/maven/model/Model.html
+
+### Gradle
+
+A [Gradle Module] metadata object is supplied from a `ResolvedModel` via the `gradleModule` property.
+
+This is a straight json parse (via Moshi) and does not have any particular "resolution" performed on it.
+The only dynamics that might be reasonable is the `available-at` redirection to another module defined
+in another file, but as it is a redirect/substitution, and not a complicated merge such as the maven
+"effective-pom" case. Logic such as variant selection and `available-at` substitution should be performed
+by client code.
+
+#### Module Spec Evolution
+
+The gradle data model is implemented using `sealed` classes (in Java, this will appear as simple abstract
+parent classes) with specifically versioned models being concrete subclasses (`data class`es in kotlin).
+The parser returns the parent abstract type, and if that is relied on, future versions of the data classes
+should be compatible. If functionality is needed from newer data types, checking the subtype of the data
+model (e.g. `ModuleV1_1`) and casting will allow access to unavailable details. To the extent future
+versions of the gradle spec are backwards compatible, the abstraction will add features with noop/null
+defaults as appopriate, but this mechanism may conceal new, incompatible features, accessible by casting
+to the correct data model subtype.
+
+Currently, there is only one subtype (`ModuleV1_1`) which can read 1.0 and 1.1 `.module` files.
+
+> Note: The linked specification above is missing some clarification, and its example is not complete. Example
+> json files are available in the test directories of this project, and in some gradle subprojects.
+
+[Gradle Module]: https://github.com/gradle/gradle/blob/master/subprojects/docs/src/docs/design/gradle-module-metadata-latest-specification.md
+
 
 ## Demo CLI
 
