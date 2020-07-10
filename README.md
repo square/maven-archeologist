@@ -66,6 +66,10 @@ Maven:
   </dependency>
 ```
 
+> Note: This library relies on the maven core model API artifacts, as well as the Moshi json parser
+> and kotlin stdlib and reflect artifacts, as well as okio and okhttp3. It does not shade these
+> dependencies.
+
 ### Simplest Usage
 
 In this variant, the API just downloads the POM and artifact files and their hash files, validates
