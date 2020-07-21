@@ -324,7 +324,7 @@ val versions = listOf(
 ).sorted()
 
 println(versions)
-// should print [2.0-beta-SNAPSHOT, 2.0-beta, 2.0, 2.3.5-SAPSHOT, 2.3.5, 2.3.5.2, 2a.0]
+// should print [2.0-beta-SNAPSHOT, 2.0-beta, 2.0, 2.3.5-SNAPSHOT, 2.3.5, 2.3.5.2, 2a.0]
 ```
 
 > Note: 2a.0 comes after 2.0 because 2a is non-numeric and so is lexically compared.
