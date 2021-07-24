@@ -20,7 +20,8 @@ import java.nio.file.Path
 import org.apache.maven.model.Model
 
 private val packagingToSuffix = mapOf(
-    "bundle" to "jar"
+    "bundle" to "jar",
+    "bom" to "pom"
 )
 
 /**

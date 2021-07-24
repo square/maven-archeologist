@@ -55,7 +55,7 @@ internal fun MutableMap<String, String>.fakeArtifact(
   coordinate: String,
   suffix: String,
   pomContent: String,
-  fileContent: String,
+  fileContent: String? = null,
   gradleModuleContent: String? = null,
   sourceContent: String? = null,
   realHash: Boolean = true,
@@ -68,9 +68,11 @@ internal fun MutableMap<String, String>.fakeArtifact(
   put("$dir/$filePrefix.pom", pomContent)
   put("$dir/$filePrefix.pom.sha1", if (realHash) pomContent.sha1() else "badhash")
   put("$dir/$filePrefix.pom.md5", if (realHash) pomContent.md5() else "badhash")
-  put("$dir/$filePrefix.$suffix", fileContent)
-  put("$dir/$filePrefix.$suffix.sha1", if (realHash) fileContent.sha1() else "badhash")
-  put("$dir/$filePrefix.$suffix.md5", if (realHash) fileContent.md5() else "badhash")
+  if (fileContent != null) {
+    put("$dir/$filePrefix.$suffix", fileContent)
+    put("$dir/$filePrefix.$suffix.sha1", if (realHash) fileContent.sha1() else "badhash")
+    put("$dir/$filePrefix.$suffix.md5", if (realHash) fileContent.md5() else "badhash")
+  }
   if (sourceContent != null) {
     put("$dir/$filePrefix-sources.jar", sourceContent)
     put("$dir/$filePrefix-sources.jar.sha1", if (realHash) sourceContent.sha1() else "badhash")
