@@ -29,10 +29,10 @@ kt_jvm_library(
 kt_jvm_test(
     name = "GradleModelTest",
     srcs = ["GradleModelTest.kt"],
-    friends = ["//src/main/java/com/squareup/tools/maven/resolution/gradle"],
+    friends = ["//src/main/java/com/squareup/tools/maven/resolution"],
     test_class = "com.squareup.tools.maven.resolution.GradleModelTest",
     deps = [
-        "//src/main/java/com/squareup/tools/maven/resolution/gradle",
+        "//src/main/java/com/squareup/tools/maven/resolution",
         "@maven//com/google/truth",
         "@maven//junit",
     ],
@@ -43,10 +43,10 @@ kt_jvm_test(
     size = "medium",
     srcs = ["GradleModuleParsingTest.kt"],
     data = glob(["data/*.module"]),
-    friends = ["//src/main/java/com/squareup/tools/maven/resolution/gradle"],
+    friends = ["//src/main/java/com/squareup/tools/maven/resolution"],
     test_class = "com.squareup.tools.maven.resolution.GradleModuleParsingTest",
     deps = [
-        "//src/main/java/com/squareup/tools/maven/resolution/gradle",
+        "//src/main/java/com/squareup/tools/maven/resolution",
         "@maven//com/google/truth",
         "@maven//com/squareup/okio",
         "@maven//junit",
