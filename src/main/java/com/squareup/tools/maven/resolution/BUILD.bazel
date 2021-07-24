@@ -15,9 +15,8 @@ package(default_visibility = ["//:__subpackages__"])
 
 kt_jvm_library(
     name = "resolution",
-    srcs = glob(["*.kt"]),
+    srcs = glob(["**/*.kt"]),
     deps = [
-        "//src/main/java/com/squareup/tools/maven/resolution/gradle",
         "@maven//com/squareup/moshi",
         "@maven//com/squareup/moshi:moshi-kotlin",
         "@maven//com/squareup/okhttp3:okhttp",
