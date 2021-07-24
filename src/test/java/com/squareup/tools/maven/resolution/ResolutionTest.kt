@@ -44,22 +44,22 @@ class ResolutionTest {
   private val fakeFetcher = FakeFetcher(
       cacheDir = cacheDir,
       repositoriesContent = mapOf(repoId to mutableMapOf<String, String>()
-          .fakeArtifact(
-              repoUrl = "fake://repo",
-              coordinate = "foo.bar:bar:1",
-              suffix = "txt",
-              pomContent = """<?xml version="1.0" encoding="UTF-8"?>
-                  <project><modelVersion>4.0.0</modelVersion>
-                    <groupId>foo.bar</groupId>
-                    <artifactId>bar</artifactId>
-                    <version>1</version>
-                    <packaging>txt</packaging> 
-                  </project>
-                  """.trimIndent(),
-              fileContent = "bar\n",
-              sourceContent = "sources",
-              classifiedFiles = mapOf("extra" to ("extrastuff" to "bargle"))
-          )
+        .fakeArtifact(
+            repoUrl = "fake://repo",
+            coordinate = "foo.bar:bar:1",
+            suffix = "txt",
+            pomContent = """<?xml version="1.0" encoding="UTF-8"?>
+                <project><modelVersion>4.0.0</modelVersion>
+                  <groupId>foo.bar</groupId>
+                  <artifactId>bar</artifactId>
+                  <version>1</version>
+                  <packaging>txt</packaging> 
+                </project>
+                """.trimIndent(),
+            fileContent = "bar\n",
+            sourceContent = "sources",
+            classifiedFiles = mapOf("extra" to ("extrastuff" to "bargle"))
+        )
         .fakeArtifact(
           repoUrl = "fake://repo",
           coordinate = "foo.bar:baz:2",
@@ -96,6 +96,37 @@ class ResolutionTest {
               </project>
               """.trimIndent(),
           fileContent = "baz\n"
+        )
+        .fakeArtifact(
+          repoUrl = "fake://repo",
+          coordinate = "foo.bar:bar-pom:1",
+          suffix = "txt",
+          pomContent = """<?xml version="1.0" encoding="UTF-8"?>
+                  <project><modelVersion>4.0.0</modelVersion>
+                    <groupId>foo.bar</groupId>
+                    <artifactId>bar-pom</artifactId>
+                    <version>1</version>
+                    <packaging>pom</packaging> 
+                  </project>
+                  """.trimIndent()
+        )
+        .fakeArtifact(
+          repoUrl = "fake://repo",
+          coordinate = "foo.bar:bar-bom:1",
+          suffix = "txt",
+          pomContent = """<?xml version="1.0" encoding="UTF-8"?>
+                  <project><modelVersion>4.0.0</modelVersion>
+                    <groupId>foo.bar</groupId>
+                    <artifactId>bar-bom</artifactId>
+                    <version>1</version>
+                    <packaging>bom</packaging> 
+                    <dependencies>
+                      <groupId>foo.bar</groupId>
+                      <artifactId>baz</artifactId>
+                      <version>2</version>
+                    </dependencies>
+                  </project>
+                  """.trimIndent()
         )
       )
   )
@@ -143,6 +174,34 @@ class ResolutionTest {
     assertThat(resolved.pom.localFile.readText()).contains("<groupId>foo.bar</groupId>")
     assertThat(resolved.pom.localFile.readText()).contains("<artifactId>bar</artifactId>")
     assertThat(resolved.pom.localFile.readText()).contains("<version>1</version>")
+  }
+
+  @Test fun testPomOnlyResolution() {
+    val artifact = resolver.artifactFor("foo.bar:bar-pom:1")
+    assertThat(artifact.pom.localFile.exists).isFalse()
+    val (status, resolved) = resolver.resolve(artifact)
+    assertThat(status).isInstanceOf(SUCCESSFUL::class.java)
+    assertThat(resolved).isNotNull()
+    assertThat(resolved!!.pom.localFile.exists).isTrue()
+    assertThat(resolved.pom.localFile).isEqualTo(resolved.main.localFile)
+    assertThat(resolved.pom.localFile.readText()).contains("<groupId>foo.bar</groupId>")
+    assertThat(resolved.pom.localFile.readText()).contains("<artifactId>bar-pom</artifactId>")
+    assertThat(resolved.pom.localFile.readText()).contains("<version>1</version>")
+    assertThat(resolved.pom.localFile.readText()).contains("<packaging>pom</packaging>")
+  }
+
+  @Test fun testBOMResolution() {
+    val artifact = resolver.artifactFor("foo.bar:bar-bom:1")
+    assertThat(artifact.pom.localFile.exists).isFalse()
+    val (status, resolved) = resolver.resolve(artifact)
+    assertThat(status).isInstanceOf(SUCCESSFUL::class.java)
+    assertThat(resolved).isNotNull()
+    assertThat(resolved!!.pom.localFile.exists).isTrue()
+    assertThat(resolved.pom.localFile).isEqualTo(resolved.main.localFile)
+    assertThat(resolved.pom.localFile.readText()).contains("<groupId>foo.bar</groupId>")
+    assertThat(resolved.pom.localFile.readText()).contains("<artifactId>bar-bom</artifactId>")
+    assertThat(resolved.pom.localFile.readText()).contains("<version>1</version>")
+    assertThat(resolved.pom.localFile.readText()).contains("<packaging>bom</packaging>")
   }
 
   @Test fun testBasicResolutionFail() {
