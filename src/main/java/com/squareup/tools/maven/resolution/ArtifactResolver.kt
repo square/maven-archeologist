@@ -90,7 +90,7 @@ import org.apache.maven.model.validation.DefaultModelValidator
  * local repository location). This can be configured for each [ArtifactResolver] instance via the
  * [cacheDir] property.
  */
-class ArtifactResolver(
+class ArtifactResolver @JvmOverloads constructor(
   suppressAddRepositoryWarnings: Boolean = false,
   private val strictHashValidation: Boolean = false,
   /** Should the resolver fetch the gradle module when fetching the pom file? */
