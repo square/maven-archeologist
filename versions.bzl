@@ -31,24 +31,23 @@ LIBRARY_METADATA = metadata(
 
 # What language compliance levels are we configuring
 JAVA_LANGUAGE_LEVEL = "1.8"
-KOTLIN_LANGUAGE_LEVEL = "1.3"
+KOTLIN_LANGUAGE_LEVEL = "1.5"
 
 # What version of kotlin are we using
-KOTLIN_VERSION = "1.3.71"
-KOTLINC_RELEASE_SHA = "7adb77dad99c6d2f7bde9f8bafe4c6244a04587a8e36e62b074d00eda9f8e74a"
-KOTLINC_RELEASE_URL = "https://github.com/JetBrains/kotlin/releases/download/v{v}/kotlin-compiler-{v}.zip".format(v = KOTLIN_VERSION)
+KOTLIN_VERSION = "1.5.32"
+KOTLINC_RELEASE_SHA = "2e728c43ee0bf819eae06630a4cbbc28ba2ed5b19a55ee0af96d2c0ab6b6c2a5"
 
 # what version of the kotlin rules are we using
-KOTLIN_RULES_VERSION = "sq_05"
-KOTLIN_RULES_FORK = "cgruber"
-KOTLIN_RULES_SHA = "3b9df70421660bd22d90841e57531d2df41a8123d427c04dc00ff2d866ac9c63"
-KOTLIN_RULES_URL = "https://github.com/{fork}/rules_kotlin/releases/download/{version}/rules_kotlin.tgz".format(
+KOTLIN_RULES_VERSION = "v1.6.0-RC-2"
+KOTLIN_RULES_FORK = "bazelbuild"
+KOTLIN_RULES_SHA = "88d19c92a1fb63fb64ddb278cd867349c3b0d648b6fe9ef9a200b9abcacd489d"
+KOTLIN_RULES_URL = "https://github.com/{fork}/rules_kotlin/releases/download/{version}/rules_kotlin_release.tgz".format(
     fork = KOTLIN_RULES_FORK,
     version = KOTLIN_RULES_VERSION,
 )
 
-MAVEN_REPOSITORY_RULES_VERSION = "2.0.0-alpha-3"
-MAVEN_REPOSITORY_RULES_SHA = "853976a2e4908f010568aad8f47b1a1e87e258f33b114e6e92599dc2779938c4"
+MAVEN_REPOSITORY_RULES_VERSION = "2.0.0-alpha-5"
+MAVEN_REPOSITORY_RULES_SHA = "fde80cafa02a2c034cc8086c158f500e7b6ceb16d251273a6cc82f1c0723e0e8"
 
 MAVEN_LIBRARY_VERSION = "3.6.3"
 
