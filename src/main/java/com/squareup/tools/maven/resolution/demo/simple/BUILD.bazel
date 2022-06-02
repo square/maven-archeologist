@@ -9,16 +9,15 @@
 # is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 # or implied. See the License for the specific language governing permissions and limitations under
 # the License.
-load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
+load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
 package(default_visibility = ["//:__subpackages__"])
 
 kt_jvm_library(
     name = "simple",
     srcs = ["ResolveArtifact.kt"],
-    friend = "//src/main/java/com/squareup/tools/maven/resolution",
+    associates = ["//src/main/java/com/squareup/tools/maven/resolution"],
     deps = [
-        "//src/main/java/com/squareup/tools/maven/resolution",
         "@maven//com/github/ajalt:clikt",
         "@maven//org/apache/maven:maven-builder-support",
         "@maven//org/apache/maven:maven-model",

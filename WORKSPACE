@@ -15,7 +15,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load(
     "//:versions.bzl",
     "KOTLINC_RELEASE_SHA",
-    "KOTLINC_RELEASE_URL",
+    "KOTLIN_VERSION",
     "KOTLIN_RULES_SHA",
     "KOTLIN_RULES_URL",
     "MAVEN_REPOSITORY_RULES_SHA",
@@ -30,12 +30,14 @@ http_archive(
     urls = [KOTLIN_RULES_URL],
 )
 
-load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories", "kt_register_toolchains")
+load("@io_bazel_rules_kotlin//kotlin:repositories.bzl", "kotlin_repositories", "kotlinc_version")
 
-kotlin_repositories(compiler_release = {
-    "urls": [KOTLINC_RELEASE_URL],
-    "sha256": KOTLINC_RELEASE_SHA,
-})
+kotlin_repositories(
+    compiler_release = kotlinc_version(
+        release = KOTLIN_VERSION, # just the numeric version
+        sha256 = KOTLINC_RELEASE_SHA
+    )
+)
 
 register_toolchains("//:kotlin_toolchain")
 
